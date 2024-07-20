@@ -59,5 +59,8 @@ class Token:
         self.line = line
 
     def __str__(self):
-        return f"'{self.lexeme}' {self.type} {self.literal if self.literal else ""}"
+        if self.literal:
+            return f"'{self.lexeme}' {self.type} | {self.literal}"
+        else:
+            return f"'{self.lexeme}' {self.type}"
 

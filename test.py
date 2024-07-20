@@ -1,26 +1,31 @@
 import unittest
 
 import lox
+from context import Context
 
 class TestLox(unittest.TestCase):
     def test_operators(self):
-        lox.run("- + == != =")
+        
+        lox.run(Context("- + == != ="))
 
     def test_string(self):
-        lox.run("\"this is a string")
+        lox.run(Context("\"this is a string\""))
 
     def test_number(self):
-        lox.run("123")
-        lox.run("123.456")
-        lox.run(".2134")
-        lox.run("123.")
+        str = ("123"
+               " 123.456"
+               " .123"
+               " 123.")
+        
+        lox.run(Context(str))
 
     def test_identifer(self):
-        lox.run("var")
-        lox.run("variable")
-        lox.run("my_function")
-        lox.run("_my_var")
-        lox.run("my1337")
+        str = ("var"
+               " variable"
+               " my_function"
+               " _my_var"
+               " my1337")
+        lox.run(Context(str))
 
 if __name__ == "__main__":
     unittest.main()

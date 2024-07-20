@@ -1,3 +1,4 @@
+from context import Context
 from scanner import Scanner
 
 
@@ -16,31 +17,26 @@ def main (argv):
         
 def run_file(path):
     with open(path) as file:
-            run(file)
-            if has_error:
-                raise SystemExit
+        context = Context(file)
+        run(context)
+        if context.has_error:
+            raise SystemExit
     
 
 def run_prompt():
     while True:
         source = input("> ")
-        run(source)
-        global has_error
-        has_error = False
+        context = Context(source)
+        run(context)
         
     
-def run(source):
-    scanner = Scanner(source)
+def run(context):
+    scanner = Scanner(context)
     scanner.scan_tokens()
 
     for token in scanner.tokens:
         print(token)
 
 
-def error(position, message):
-    print(f"Error: {position}: {message}")
-    global has_error
-    has_error = True
-    
 if __name__ == "__main__":
     main(sys.argv)

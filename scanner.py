@@ -1,4 +1,5 @@
 from tokens import Token
+from context import Context
 
 class Scanner:
     keywords = {
@@ -21,8 +22,9 @@ class Scanner:
     }
 
         
-    def __init__(self, source):
-        self.source = source
+    def __init__(self, context):
+        self.context = context
+        self.source = context.source
         self.start = 0  # Index of the first char in the current lexeme.
         self.current = 0  # Index of the char being scanned.
         self.line = 0
@@ -125,7 +127,7 @@ class Scanner:
                 self.add_identifier()
                 
             case _:
-                pass
+                self.context.error(self.line, "Unexpected character")
 
 
     def add_string(self):
@@ -136,7 +138,7 @@ class Scanner:
             self.advance()
 
         if self.is_at_end():
-            print("Error")
+            self.context.error(self.line, "Unterminated string")
             return
 
         self.advance() # Consume closing quote

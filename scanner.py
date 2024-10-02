@@ -1,27 +1,27 @@
 from tokens import Token
 from context import Context
 
+
 class Scanner:
     keywords = {
-        'and': Token.Type.AND,
-        'class' : Token.Type.CLASS,
-        'else' : Token.Type.ELSE,
-        'false' : Token.Type.FALSE,
-        'for' : Token.Type.FOR,
-        'fun' : Token.Type.FUN,
-        'if' : Token.Type.IF,
-        'nil' : Token.Type.NIL,
-        'or' : Token.Type.OR,
-        'print' : Token.Type.PRINT,
-        'return' : Token.Type.RETURN,
-        'super' : Token.Type.SUPER,
-        'this' : Token.Type.THIS,
-        'true' : Token.Type.TRUE,
-        'var' : Token.Type.VAR,
-        'while' : Token.Type.WHILE
+        "and": Token.Type.AND,
+        "class": Token.Type.CLASS,
+        "else": Token.Type.ELSE,
+        "false": Token.Type.FALSE,
+        "for": Token.Type.FOR,
+        "fun": Token.Type.FUN,
+        "if": Token.Type.IF,
+        "nil": Token.Type.NIL,
+        "or": Token.Type.OR,
+        "print": Token.Type.PRINT,
+        "return": Token.Type.RETURN,
+        "super": Token.Type.SUPER,
+        "this": Token.Type.THIS,
+        "true": Token.Type.TRUE,
+        "var": Token.Type.VAR,
+        "while": Token.Type.WHILE,
     }
 
-        
     def __init__(self, context):
         self.context = context
         self.source = context.source
@@ -30,109 +30,106 @@ class Scanner:
         self.line = 0
         self.tokens = []
 
-
     def scan_tokens(self):
-        while (not self.is_at_end()):
+        while not self.is_at_end():
             self.start = self.current
             self.scan_token()
 
         # Enf of file
         self.tokens.append(Token(Token.Type.EOF, "", None, self.line))
-        
-        return self.tokens
 
+        return self.tokens
 
     def scan_token(self):
         c = self.advance()
 
         match c:
             # Single Character Lexemes
-            case '(':
+            case "(":
                 self.add_token(Token.Type.LEFT_PAREN)
-            
-            case ')':
+
+            case ")":
                 self.add_token(Token.Type.RIGHT_PAREN)
 
-            case '{':
+            case "{":
                 self.add_token(Token.Type.LEFT_BRACE)
-                
-            case '}':
+
+            case "}":
                 self.add_token(Token.Type.RIGHT_BRACE)
-                
-            case ',':
+
+            case ",":
                 self.add_token(Token.Type.COMMA)
-                
-            case '.':
+
+            case ".":
                 self.add_token(Token.Type.DOT)
 
-            case '-':
+            case "-":
                 self.add_token(Token.Type.MINUS)
-                
-            case '+':
+
+            case "+":
                 self.add_token(Token.Type.PLUS)
 
-            case ';':
+            case ";":
                 self.add_token(Token.Type.SEMICOLON)
 
-            case '*':
+            case "*":
                 self.add_token(Token.Type.STAR)
 
             # Two-Character Lexemes
-            case '!':
-                if self.advance_if('=') is not None:
+            case "!":
+                if self.advance_if("=") is not None:
                     self.add_token(Token.Type.BANG_EQUAL)
                 else:
                     self.add_token(Token.Type.BANG)
 
-            case '=':
-                if self.advance_if('=') is not None:
+            case "=":
+                if self.advance_if("=") is not None:
                     self.add_token(Token.Type.EQUAL_EQUAL)
                 else:
                     self.add_token(Token.Type.EQUAL)
-                    
-            case '<':
-                if self.advance_if('=') is not None:
+
+            case "<":
+                if self.advance_if("=") is not None:
                     self.add_token(Token.Type.LESS_EQUAL)
                 else:
                     self.add_token(Token.Type.LESS)
 
-            case '>':
-                if self.advance_if('=') is not None:
+            case ">":
+                if self.advance_if("=") is not None:
                     self.add_token(Token.Type.GREATER_EQUAL)
                 else:
                     self.add_token(Token.Type.GREATER)
 
-            case '/':
-                c = self.advance_if('/')
-                if c == '/':
-                    while self.peek() != '\n' and not self.is_at_end():
+            case "/":
+                c = self.advance_if("/")
+                if c == "/":
+                    while self.peek() != "\n" and not self.is_at_end():
                         self.advance()
                 else:
                     self.add_token(Token.Type.SLASH)
 
             # Whitespaces
-            case ' ' | '\r' | '\t':
+            case " " | "\r" | "\t":
                 pass
 
             case '"':
                 self.add_string()
-            
-            case '\n':
+
+            case "\n":
                 self.line += 1
 
             case _ if c.isdecimal():
                 self.add_number()
 
-            case _ if c.isalpha() or c == '_':
+            case _ if c.isalpha() or c == "_":
                 self.add_identifier()
-                
+
             case _:
                 self.context.error(self.line, "Unexpected character")
 
-
     def add_string(self):
         while self.peek() != '"' and not self.is_at_end():
-            if self.peek() == '\n':
+            if self.peek() == "\n":
                 self.line += 1
 
             self.advance()
@@ -141,71 +138,64 @@ class Scanner:
             self.context.error(self.line, "Unterminated string")
             return
 
-        self.advance() # Consume closing quote
+        self.advance()  # Consume closing quote
 
-        str = self.source[self.start + 1 :self.current - 1]
+        str = self.source[self.start + 1 : self.current - 1]
         self.add_token(Token.Type.STRING, str)
-
 
     def add_number(self):
         while self.peek().isdigit():
             self.advance()
 
-        if self.peek() == '.' and self.peek_next().isdigit():
-            self.advance() # Consume the .
-            
+        if self.peek() == "." and self.peek_next().isdigit():
+            self.advance()  # Consume the .
+
             while self.peek().isdigit():
                 self.advance()
 
-        self.add_token(Token.Type.NUMBER, float(self.source[self.start:self.current]))
+        self.add_token(Token.Type.NUMBER, float(self.source[self.start : self.current]))
 
-        
     def add_identifier(self):
-        while self.peek().isalnum() or self.peek() == '_':
+        while self.peek().isalnum() or self.peek() == "_":
             self.advance()
 
-        str = self.source[self.start:self.current]
+        str = self.source[self.start : self.current]
 
         if str not in self.keywords:
             self.add_token(Token.Type.IDENTIFIER)
         else:
             self.add_token(self.keywords[str])
 
-
-    def add_token(self, type, literal = None):
-        lexeme = self.source[self.start:self.current]
+    def add_token(self, type, literal=None):
+        lexeme = self.source[self.start : self.current]
         self.tokens.append(Token(type, lexeme, literal, self.line))
-
 
     def is_at_end(self):
         return self.current >= len(self.source)
-
 
     def advance(self):
         c = self.source[self.current]
         self.current += 1
 
         return c
-    
 
     def advance_if(self, expected):
         if self.is_at_end():
-            return None
+            return False
 
         c = self.source[self.current]
 
         if c != expected:
-            return None
-    
-        self.current += 1
-        return c
+            return False
 
+        self.current += 1
+
+        return True
 
     def peek(self):
         return self.source[self.current] if not self.is_at_end() else ""
 
-
     def peek_next(self):
-        return self.source[self.current + 1] if self.current + 1 < len(self.source) else ""
-        
-    
+        return (
+            self.source[self.current + 1] if self.current + 1 < len(self.source) else ""
+        )

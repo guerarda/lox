@@ -13,23 +13,17 @@ class TestLox(unittest.TestCase):
         lox.run(Context("- + == != ="))
 
     def test_string(self):
-        lox.run(Context("\"this is a string\""))
+        lox.run(Context('"this is a string"'))
 
     def test_number(self):
-        str = ("123"
-               " 123.456"
-               " .123"
-               " 123.")
-        
+        str = "123" " 123.456" " .123" " 123."
+
         lox.run(Context(str))
 
     def test_identifer(self):
-        str = ("var"
-               " variable"
-               " my_function"
-               " _my_var"
-               " my1337")
+        str = "var" " variable" " my_function" " _my_var" " my1337"
         lox.run(Context(str))
+
 
 class TestASTPrinter(unittest.TestCase):
     def test_print(self):
@@ -44,12 +38,8 @@ class TestASTPrinter(unittest.TestCase):
 
         e_mult = Expr.Binary(e_min123, t_star, e_grp)
 
-
         print(ASTPrinter().print(e_mult))
 
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

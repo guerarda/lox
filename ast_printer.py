@@ -1,14 +1,14 @@
 import expression as Expr
 
-class ASTPrinter(Expr.Visitor):
+
+class sASTPrinter(Expr.Visitor):
     def print(self, expression):
         return expression.accept(self)
 
-    def wrap(self, name,  expressions):
+    def wrap(self, name, expressions):
         strings = [expr.accept(self) for expr in expressions]
         return f"({name} {" ".join(strings)})"
-        
-    
+
     def visit_binary(self, expr):
         return self.wrap(expr.operator.lexeme, [expr.left, expr.right])
 
@@ -17,8 +17,6 @@ class ASTPrinter(Expr.Visitor):
 
     def visit_literal(self, expr):
         return f"{expr.value}" if expr.value else "nil"
-            
+
     def visit_unary(self, expr):
         return self.wrap(expr.operator.lexeme, [expr.right])
-
-    

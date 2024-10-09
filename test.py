@@ -3,7 +3,7 @@ import unittest
 import lox
 import expression as Expr
 
-from ast_printer import ASTPrinter
+from astprinter import ASTPrinter
 from context import Context
 from tokens import Token
 

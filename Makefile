@@ -1,3 +1,3 @@
 test:
-	python3 -m test
+	python3 -m test -v
 

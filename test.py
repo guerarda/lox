@@ -6,6 +6,8 @@ import expression as Expr
 from astprinter import ASTPrinter
 from context import Context
 from tokens import Token
+from parser import Parser
+from scanner import Scanner
 
 
 class TestLox(unittest.TestCase):
@@ -39,6 +41,25 @@ class TestASTPrinter(unittest.TestCase):
         e_mult = Expr.Binary(e_min123, t_star, e_grp)
 
         print(ASTPrinter().print(e_mult))
+
+
+class TestParser(unittest.TestCase):
+    def test_expression(self):
+        tokens = [
+            Token(Token.Type.NUMBER, "123", 123, 1),
+            Token(Token.Type.PLUS, "+", None, 1),
+            Token(Token.Type.NUMBER, "456", 456, 1),
+            Token(Token.Type.EOF, "", None, 1),
+        ]
+
+        print(Parser(tokens).expression())
+
+    def test_scan_parse(self):
+        test_str = "(123 == (100 + 23)) != false"
+        s = Scanner(Context(test_str))
+        s.scan_tokens()
+
+        print(ASTPrinter().print(Parser(s.tokens).parse()))
 
 
 if __name__ == "__main__":

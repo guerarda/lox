@@ -1,6 +1,11 @@
+# tokens.py
+
 from enum import auto, Enum
 
+from dataclasses import dataclass
 
+
+@dataclass
 class Token:
     class Type(Enum):
         # Single-character tokens
@@ -52,11 +57,10 @@ class Token:
 
         EOF = auto()
 
-    def __init__(self, type, lexeme, literal, line):
-        self.type = type
-        self.lexeme = lexeme
-        self.literal = literal
-        self.line = line
+    type: Type
+    lexeme: str
+    literal: object
+    line: int
 
     def __str__(self):
         if self.literal:

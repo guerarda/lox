@@ -1,6 +1,8 @@
+from astprinter import ASTPrinter
 from context import Context
+from expression import Expression
 from scanner import Scanner
-
+from parser import Parser
 
 import sys
 
@@ -33,11 +35,12 @@ def run_prompt():
 
 def run(context):
     scanner = Scanner(context)
-    scanner.scan_tokens()
+    tokens = scanner.scan_tokens()
 
-    for token in scanner.tokens:
-        print(token)
+    parser = Parser(tokens)
+    expression = parser.parse()
 
+    print(ASTPrinter().print(expression))
 
 if __name__ == "__main__":
     main(sys.argv)

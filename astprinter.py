@@ -1,4 +1,4 @@
-# ASTPrinter
+# astprinter.py
 
 from expression import *
 
@@ -14,10 +14,10 @@ class ASTPrinter:
                 return self.wrap(expr.operator.lexeme, [expr.left, expr.right])
 
             case Grouping():
-                return self.wrap("grouping", [expr.expression])
+                return self.wrap("grp", [expr.expression])
 
             case Literal():
-                return f"{expr.value}" if expr.value else "nil"
+                return f"{expr.value}"
 
             case Unary():
                 return self.wrap(expr.operator.lexeme, [expr.right])

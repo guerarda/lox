@@ -30,7 +30,7 @@ class Scanner:
         self.line = 0
         self.tokens = []
 
-    def scan_tokens(self):
+    def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():
             self.start = self.current
             self.scan_token()
@@ -77,32 +77,31 @@ class Scanner:
 
             # Two-Character Lexemes
             case "!":
-                if self.advance_if("=") is not None:
+                if self.advance_if("="):
                     self.add_token(Token.Type.BANG_EQUAL)
                 else:
                     self.add_token(Token.Type.BANG)
 
             case "=":
-                if self.advance_if("=") is not None:
+                if self.advance_if("="):
                     self.add_token(Token.Type.EQUAL_EQUAL)
                 else:
                     self.add_token(Token.Type.EQUAL)
 
             case "<":
-                if self.advance_if("=") is not None:
+                if self.advance_if("="):
                     self.add_token(Token.Type.LESS_EQUAL)
                 else:
                     self.add_token(Token.Type.LESS)
 
             case ">":
-                if self.advance_if("=") is not None:
+                if self.advance_if("="):
                     self.add_token(Token.Type.GREATER_EQUAL)
                 else:
                     self.add_token(Token.Type.GREATER)
 
             case "/":
-                c = self.advance_if("/")
-                if c == "/":
+                if self.advance_if("/"):
                     while self.peek() != "\n" and not self.is_at_end():
                         self.advance()
                 else:

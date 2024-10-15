@@ -1,7 +1,9 @@
 # parser.py
 
+from context import Context
 from tokens import Token
 from expression import *
+
 
 class ParseError(Exception):
     def __init__(self, token, message):
@@ -12,14 +14,24 @@ class ParseError(Exception):
     def __str__(self):
         if self.token.type == Token.Type.EOF:
             return f"[Line {self.token.line}] Error at EOL, {self.message}"
-        return f"[Line {self.token.line}] Error at '{self.token.lexeme}', {self.message}"
+        return (
+            f"[Line {self.token.line}] Error at '{self.token.lexeme}', {self.message}"
+        )
+
 
 class Parser:
     """Parse a list of AST Tokens and returns a corresponding
     Expression"""
 
-    def __init__(self, tokens: list[Token]):
-        self.tokens = tokens
+    @classmethod
+    def parse_tokens(cls, tokens: list[Token]):
+        ctx = Context()
+        ctx.tokens = tokens
+        return cls(ctx).parse()
+
+    def __init__(self, context: Context):
+        self.context = context
+        self.tokens = context.tokens
         self.current = 0
 
     def parse(self) -> Expression:
@@ -27,6 +39,9 @@ class Parser:
             return self.expression()
         except ParseError as e:
             print(e)
+            self.context.has_error = True
+
+        return Expression()
 
     def expression(self) -> Expression:
         return self.equality()

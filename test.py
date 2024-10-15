@@ -3,10 +3,11 @@ import unittest
 from astprinter import ASTPrinter
 from context import Context
 from interpreter import Interpreter, InterpreterError
-from parser import Parser
+from parser import ParseError, Parser
 from scanner import Scanner
 from tokens import Token
 import expression as Expr
+import lox as Lox
 
 
 class TestScanner(unittest.TestCase):
@@ -66,26 +67,7 @@ class TestASTPrinter(unittest.TestCase):
 
         e_mult = Expr.Binary(t_star, e_min123, e_grp)
 
-        print(ASTPrinter().print(e_mult))
-
-
-class TestParser(unittest.TestCase):
-    def test_expression(self):
-        tokens = [
-            Token(Token.Type.NUMBER, "123", 123, 1),
-            Token(Token.Type.PLUS, "+", None, 1),
-            Token(Token.Type.NUMBER, "456", 456, 1),
-            Token(Token.Type.EOF, "", None, 1),
-        ]
-
-        print(Parser(tokens).expression())
-
-    def test_scan_parse(self):
-        test_str = "(123 == (100 + 23)) != false"
-        s = Scanner(Context(test_str))
-        s.scan_tokens()
-
-        print(ASTPrinter().print(Parser(s.tokens).parse()))
+        ASTPrinter().print(e_mult)
 
 
 class TestInterpreter(unittest.TestCase):
@@ -145,6 +127,24 @@ class TestInterpreter(unittest.TestCase):
             Interpreter().evaluate(
                 Expr.Binary(Token.SLASH(), Expr.Literal(2.0), Expr.Literal(0.0))
             )
+
+
+class TestLox(unittest.TestCase):
+    def test_parsing(self):
+        with self.assertRaises(ParseError):
+            Lox.test_run("1 ++ 2")
+
+        with self.assertRaises(ParseError):
+            Lox.test_run("(()")
+
+    def test_expression(self):
+        self.assertTrue(Lox.test_run("1 == 1"))
+        self.assertFalse(Lox.test_run("1 == 2"))
+
+        self.assertTrue(Lox.test_run("1 != 2"))
+        self.assertTrue(Lox.test_run("2.5 > 1.2"))
+
+        self.assertTrue(Lox.test_run("(123 == (100 + 23)) != false"))
 
 
 if __name__ == "__main__":

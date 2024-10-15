@@ -68,7 +68,6 @@ class Token:
         else:
             return f"'{self.lexeme}' {self.type}"
 
-
     # Utils for quickly creating Tokens, mostly for tests
     @classmethod
     def MINUS(cls):

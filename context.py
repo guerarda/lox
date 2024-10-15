@@ -1,8 +1,13 @@
-class Context:
-    def __init__(self, source):
-        self.source = source
-        self.has_error = False
+# context
 
-    def error(self, position, message):
-        print(f"Error: {position}: {message}")
-        self.has_errors = True
+
+class Context:
+    def __init__(self, source=None):
+        self.source = source
+        self.tokens = []
+        self.has_error = False
+        self.has_runtime_error = False
+
+    def reset_errors(self):
+        self.has_error = False
+        self.has_runtime_error = False

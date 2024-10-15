@@ -1,6 +1,5 @@
-from astprinter import ASTPrinter
 from context import Context
-from expression import Expression
+from interpreter import Interpreter
 from scanner import Scanner
 from parser import Parser
 
@@ -38,9 +37,7 @@ def run(context):
     tokens = scanner.scan_tokens()
 
     parser = Parser(tokens)
-    expression = parser.parse()
-
-    print(ASTPrinter().print(expression))
+    Interpreter().interpret(parser.parse())
 
 if __name__ == "__main__":
     main(sys.argv)

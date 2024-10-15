@@ -12,8 +12,8 @@ class Expression:
 # -------------------------------------------------------------------------------
 @dataclass
 class Binary(Expression):
-    left: Expression
     operator: Token
+    left: Expression
     right: Expression
 
 

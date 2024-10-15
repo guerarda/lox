@@ -3,6 +3,16 @@
 from tokens import Token
 from expression import *
 
+class ParseError(Exception):
+    def __init__(self, token, message):
+        super().__init__(message)
+        self.message = message
+        self.token = token
+
+    def __str__(self):
+        if self.token.type == Token.Type.EOF:
+            return f"[Line {self.token.line}] Error at EOL, {self.message}"
+        return f"[Line {self.token.line}] Error at '{self.token.lexeme}', {self.message}"
 
 class Parser:
     """Parse a list of AST Tokens and returns a corresponding
@@ -13,7 +23,13 @@ class Parser:
         self.current = 0
 
     def parse(self) -> Expression:
-        return self.expression()
+        try:
+            return self.expression()
+        except ParseError as e:
+            print(e)
+
+    def expression(self) -> Expression:
+        return self.equality()
 
     # Look for specific token types
     def match(self, token: Token.Type) -> bool:
@@ -30,12 +46,12 @@ class Parser:
 
         return False
 
-    def expect(self, token: Token.Type):
-        if self.tokens[self.current].type == token:
+    def expect(self, token: Token.Type, message: str):
+        if self.peek().type == token:
             self.advance()
             return
 
-        raise SyntaxError
+        raise ParseError(self.peek(), message)
 
     # Move within and inspect the list of tokens
     def advance(self):
@@ -52,16 +68,13 @@ class Parser:
         return self.tokens[self.current] == Token.Type.EOF
 
     # Parse Expressions
-    def expression(self) -> Expression:
-        return self.equality()
-
     def equality(self) -> Expression:
         lhs = self.comparison()
 
         while self.match_any([Token.Type.BANG_EQUAL, Token.Type.EQUAL_EQUAL]):
             op = self.previous()
             rhs = self.comparison()
-            lhs = Binary(lhs, op, rhs)
+            lhs = Binary(op, lhs, rhs)
 
         return lhs
 
@@ -78,7 +91,7 @@ class Parser:
         ):
             op = self.previous()
             rhs = self.term()
-            lhs = Binary(lhs, op, rhs)
+            lhs = Binary(op, lhs, rhs)
 
         return lhs
 
@@ -88,7 +101,7 @@ class Parser:
         while self.match_any([Token.Type.MINUS, Token.Type.PLUS]):
             op = self.previous()
             rhs = self.factor()
-            lhs = Binary(lhs, op, rhs)
+            lhs = Binary(op, lhs, rhs)
 
         return lhs
 
@@ -98,7 +111,7 @@ class Parser:
         while self.match_any([Token.Type.STAR, Token.Type.SLASH]):
             op = self.previous()
             rhs = self.unary()
-            lhs = Binary(lhs, op, rhs)
+            lhs = Binary(op, lhs, rhs)
 
         return lhs
 
@@ -126,8 +139,8 @@ class Parser:
 
         if self.match(Token.Type.LEFT_PAREN):
             expr = self.expression()
-            self.expect(Token.Type.RIGHT_PAREN)
+            self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after expression")
 
             return Grouping(expr)
 
-        raise SyntaxError
+        raise ParseError(self.peek(), "Expect expression")

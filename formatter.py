@@ -39,6 +39,13 @@ class Formatter:
             case Stmt.Expression(expr):
                 return f"{self.format_expr(expr)};"
 
+            case Stmt.Var(name, initializer):
+                return (
+                    f"var {name.lexeme};"
+                    if initializer is None
+                    else f"var {name} = {self.format_expr(initializer)}"
+                )
+
             case _:
                 raise NotImplementedError
 

@@ -47,17 +47,17 @@ class Parser:
     def statements(self) -> list[Stmt.Statement]:
         statements = []
         while not self.is_at_end():
-            statements.append(self.statement())
+            statements.append(self.declaration())
 
         return statements
 
     def expression(self) -> Expr.Expression:
         return self.equality()
 
-    def statement(self) -> Stmt.Statement:
-        if self.match(Token.Type.PRINT):
-            return self.print_stmt()
-        return self.expression_stmt()
+    def declaration(self) -> Stmt.Statement:
+        if self.match(Token.Type.VAR):
+            return self.var_decl()
+        return self.statement()
 
     # Private Functions
     # Look for specific token types
@@ -169,12 +169,19 @@ class Parser:
         if self.match(Token.Type.LEFT_PAREN):
             expr = self.expression()
             self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after expression")
-
             return Expr.Grouping(expr)
+
+        if self.match(Token.Type.IDENTIFIER):
+            return Expr.Variable(self.previous())
 
         raise ParseError(self.peek(), "Expect expression")
 
     # Parse Statements
+    def statement(self) -> Stmt.Statement:
+        if self.match(Token.Type.PRINT):
+            return self.print_stmt()
+        return self.expression_stmt()
+
     def print_stmt(self) -> Stmt.Statement:
         expr = self.expression()
         self.expect(Token.Type.SEMICOLON, "Expect ';' after value")
@@ -184,3 +191,14 @@ class Parser:
         expr = self.expression()
         self.expect(Token.Type.SEMICOLON, "Expect ';' after expression")
         return Stmt.Expression(expr)
+
+    def var_decl(self) -> Stmt.Var:
+        self.expect(Token.Type.IDENTIFIER, "Expect variable name")
+        name = self.previous()
+
+        initializer = None
+        if self.match(Token.Type.EQUAL):
+            initializer = self.expression()
+
+        self.expect(Token.Type.SEMICOLON, "Expect ';' after variable declaration")
+        return Stmt.Var(name, initializer)

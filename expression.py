@@ -31,3 +31,8 @@ class Literal(Expression):
 class Unary(Expression):
     operator: Token
     right: Expression
+
+
+@dataclass
+class Variable(Expression):
+    name: Token

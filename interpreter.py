@@ -2,6 +2,7 @@
 
 import expression as Expr
 import statement as Stmt
+from formatter import Formatter
 from tokens import Token
 
 import logging
@@ -40,7 +41,8 @@ class InterpreterStatementError(InterpreterError):
         self.message = message
 
     def __str__(self):
-        return f"{self.message} '{self.statement}'"
+        print(Formatter().format_stmt(self.statement))
+        return f"{self.message} '{Formatter().format_stmt(self.statement)}'"
 
 
 class Interpreter:

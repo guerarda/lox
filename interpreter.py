@@ -1,6 +1,7 @@
 # interpreted
 
 import expression as Expr
+import statement as Stmt
 from tokens import Token
 
 
@@ -21,7 +22,7 @@ class InterpreterTokenError(InterpreterError):
 
 
 class InterpreterExpressionError(InterpreterError):
-    def __init__(self, expression, message):
+    def __init__(self, expression: Expr.Expression, message: str):
         super().__init__(message)
         self.expression = expression
         self.message = message
@@ -30,10 +31,30 @@ class InterpreterExpressionError(InterpreterError):
         return f"Error: {self.message} '{self.expression}'"
 
 
+class InterpreterStatementError(InterpreterError):
+    def __init__(self, statement: Stmt.Statement, message: str):
+        super().__init__(message)
+        self.statement = statement
+        self.message = message
+
+    def __str__(self):
+        return f"Error: {self.message} '{self.statement}'"
+
+
 class Interpreter:
     def __init__(self, context=None):
         self.context = context
 
+    def interpret(self, statements: list[Stmt.Statement]):
+        try:
+            self.execute_statements(statements)
+
+        except InterpreterError as e:
+            print(e)
+            if self.context:
+                self.context.has_runtime_error = True
+
+    # Private functions
     def is_truthy(self, obj) -> bool:
         match obj:
             case None:
@@ -64,17 +85,6 @@ class Interpreter:
 
             case _:
                 return value
-
-    def interpret(self, expression: Expr.Expression):
-        try:
-            value = self.evaluate(expression)
-            print(self.stringify(value))
-
-        except InterpreterError as e:
-            print(e)
-
-            if self.context:
-                self.context.has_runtime_error = True
 
     def evaluate(self, expression: Expr.Expression):
         match expression:
@@ -176,16 +186,26 @@ class Interpreter:
 
             case _:
                 raise InterpreterExpressionError(
-                    expression, "Couldn't not evaluate Expression"
+                    expression, "Could not evaluate Expression"
                 )
+
+    def execute(self, statement: Stmt.Statement):
+        match statement:
+            case Stmt.Print(expr):
+                print(self.stringify(self.evaluate(expr)))
+
+            case Stmt.Expression(expr):
+                self.evaluate(expr)
+
+            case _:
+                raise InterpreterStatementError(
+                    statement, "Could not execute Statement"
+                )
+
+    def execute_statements(self, statements: list[Stmt.Statement]):
+        for stmt in statements:
+            self.execute(stmt)
 
 
 if __name__ == "__main__":
-    Interpreter().interpret(Expr.Unary(Token.MINUS(), Expr.Literal(value=2.0)))
-    Interpreter().interpret(
-        Expr.Binary(
-            Token.MINUS(),
-            Expr.Literal(value=3.0),
-            Expr.Literal(value=2.0),
-        )
-    )
+    Interpreter().interpret([Stmt.Print(Expr.Literal(2.0))])

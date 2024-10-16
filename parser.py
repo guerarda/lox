@@ -1,8 +1,10 @@
 # parser.py
 
 from context import Context
+import expression
 from tokens import Token
 from expression import *
+import statement as Stmt
 
 
 class ParseError(Exception):
@@ -34,18 +36,30 @@ class Parser:
         self.tokens = context.tokens
         self.current = 0
 
-    def parse(self) -> Expression:
+    # Public functions
+    def parse(self):
         try:
-            return self.expression()
+            return self.statements()
         except ParseError as e:
             print(e)
             self.context.has_error = True
 
-        return Expression()
+    def statements(self) -> list[Stmt.Statement]:
+        statements = []
+        while not self.is_at_end():
+            statements.append(self.statement())
+
+        return statements
 
     def expression(self) -> Expression:
         return self.equality()
 
+    def statement(self) -> Stmt.Statement:
+        if self.match(Token.Type.PRINT):
+            return self.print_stmt()
+        return self.expression_stmt()
+
+    # Private Functions
     # Look for specific token types
     def match(self, token: Token.Type) -> bool:
         if self.tokens[self.current].type == token:
@@ -80,7 +94,7 @@ class Parser:
         return self.tokens[self.current]
 
     def is_at_end(self) -> bool:
-        return self.tokens[self.current] == Token.Type.EOF
+        return self.peek().type == Token.Type.EOF
 
     # Parse Expressions
     def equality(self) -> Expression:
@@ -159,3 +173,14 @@ class Parser:
             return Grouping(expr)
 
         raise ParseError(self.peek(), "Expect expression")
+
+    # Parse Statements
+    def print_stmt(self) -> Stmt.Statement:
+        expr = self.expression()
+        self.expect(Token.Type.SEMICOLON, "Expect ';' after value")
+        return Stmt.Print(expr)
+
+    def expression_stmt(self):
+        expr = self.expression()
+        self.expect(Token.Type.SEMICOLON, "Expect ';' after expression")
+        return Stmt.Expression(expr)

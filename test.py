@@ -138,13 +138,13 @@ class TestLox(unittest.TestCase):
             Lox.test_run("(()")
 
     def test_expression(self):
-        self.assertTrue(Lox.test_run("1 == 1"))
-        self.assertFalse(Lox.test_run("1 == 2"))
+        self.assertTrue(Lox.test_run("print 1 == 1;"))
+        self.assertFalse(Lox.test_run("1 == 2;"))
 
-        self.assertTrue(Lox.test_run("1 != 2"))
-        self.assertTrue(Lox.test_run("2.5 > 1.2"))
+        self.assertTrue(Lox.test_run("1 != 2;"))
+        self.assertTrue(Lox.test_run("2.5 > 1.2;"))
 
-        self.assertTrue(Lox.test_run("(123 == (100 + 23)) != false"))
+        self.assertTrue(Lox.test_run("(123 == (100 + 23)) != false;"))
 
 
 if __name__ == "__main__":

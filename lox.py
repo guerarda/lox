@@ -5,6 +5,8 @@ from interpreter import Interpreter
 from scanner import Scanner
 from parser import Parser
 
+import sys
+
 
 def main(argv):
     if len(argv) > 2:
@@ -42,12 +44,12 @@ def run(context):
     context.tokens = scanner.scan_tokens()
 
     parser = Parser(context)
-    expr = parser.parse()
+    stmts = parser.statements()
 
     if context.has_error:
         return
 
-    Interpreter(context).interpret(expr)
+    Interpreter(context).interpret(stmts)
 
 
 def test_run(src):
@@ -59,9 +61,15 @@ def test_run(src):
     context.tokens = scanner.scan_tokens()
 
     parser = Parser(context)
-    expr = parser.expression()
+    stmts = parser.statements()
+
+    print(stmts)
 
     if context.has_error:
         return
 
-    return Interpreter(context).evaluate(expr)
+    return Interpreter(context).execute_statements(stmts)
+
+
+if __name__ == "__main__":
+    main(sys.argv)

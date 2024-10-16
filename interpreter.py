@@ -1,7 +1,6 @@
 # interpreted
 
-import expression as Expression
-from context import Context
+import expression as Expr
 from tokens import Token
 
 
@@ -66,7 +65,7 @@ class Interpreter:
             case _:
                 return value
 
-    def interpret(self, expression: Expression.Expression):
+    def interpret(self, expression: Expr.Expression):
         try:
             value = self.evaluate(expression)
             print(self.stringify(value))
@@ -77,20 +76,20 @@ class Interpreter:
             if self.context:
                 self.context.has_runtime_error = True
 
-    def evaluate(self, expression: Expression.Expression):
+    def evaluate(self, expression: Expr.Expression):
         match expression:
-            case Expression.Literal():
+            case Expr.Literal():
                 return expression.value
 
-            case Expression.Unary(Token(Token.Type.BANG), right):
+            case Expr.Unary(Token(Token.Type.BANG), right):
                 return not self.is_truthy(self.evaluate(right))
 
-            case Expression.Unary(Token(Token.Type.MINUS), right):
+            case Expr.Unary(Token(Token.Type.MINUS), right):
                 rv = self.evaluate(right)
                 self.check_number_operand(expression.operator, rv)
                 return -float(rv)
 
-            case Expression.Binary(Token(Token.Type.MINUS), left, right):
+            case Expr.Binary(Token(Token.Type.MINUS), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -99,7 +98,7 @@ class Interpreter:
 
                 return float(lv) - float(rv)
 
-            case Expression.Binary(Token(Token.Type.PLUS), left, right):
+            case Expr.Binary(Token(Token.Type.PLUS), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -108,7 +107,7 @@ class Interpreter:
 
                 return float(lv) + float(rv)
 
-            case Expression.Binary(Token(Token.Type.STAR), left, right):
+            case Expr.Binary(Token(Token.Type.STAR), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -117,7 +116,7 @@ class Interpreter:
 
                 return float(lv) * float(rv)
 
-            case Expression.Binary(Token(Token.Type.SLASH), left, right):
+            case Expr.Binary(Token(Token.Type.SLASH), left, right):
 
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
@@ -130,7 +129,7 @@ class Interpreter:
 
                 return float(lv) / float(rv)
 
-            case Expression.Binary(Token(Token.Type.GREATER), left, right):
+            case Expr.Binary(Token(Token.Type.GREATER), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -139,7 +138,7 @@ class Interpreter:
 
                 return float(lv) > float(rv)
 
-            case Expression.Binary(Token(Token.Type.GREATER_EQUAL), left, right):
+            case Expr.Binary(Token(Token.Type.GREATER_EQUAL), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -148,7 +147,7 @@ class Interpreter:
 
                 return float(lv) >= float(rv)
 
-            case Expression.Binary(Token(Token.Type.LESS), left, right):
+            case Expr.Binary(Token(Token.Type.LESS), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -157,7 +156,7 @@ class Interpreter:
 
                 return float(lv) < float(rv)
 
-            case Expression.Binary(Token(Token.Type.LESS_EQUAL), left, right):
+            case Expr.Binary(Token(Token.Type.LESS_EQUAL), left, right):
                 lv = self.evaluate(left)
                 self.check_number_operand(expression.operator, lv)
 
@@ -166,13 +165,13 @@ class Interpreter:
 
                 return float(lv) <= float(rv)
 
-            case Expression.Binary(Token(Token.Type.EQUAL_EQUAL), left, right):
+            case Expr.Binary(Token(Token.Type.EQUAL_EQUAL), left, right):
                 return self.is_equal(left, right)
 
-            case Expression.Binary(Token(Token.Type.BANG_EQUAL), left, right):
+            case Expr.Binary(Token(Token.Type.BANG_EQUAL), left, right):
                 return not self.is_equal(left, right)
 
-            case Expression.Grouping(expr):
+            case Expr.Grouping(expr):
                 return self.evaluate(expr)
 
             case _:
@@ -182,13 +181,11 @@ class Interpreter:
 
 
 if __name__ == "__main__":
+    Interpreter().interpret(Expr.Unary(Token.MINUS(), Expr.Literal(value=2.0)))
     Interpreter().interpret(
-        Expression.Unary(Token.MINUS(), Expression.Literal(value=2.0))
-    )
-    Interpreter().interpret(
-        Expression.Binary(
+        Expr.Binary(
             Token.MINUS(),
-            Expression.Literal(value=3.0),
-            Expression.Literal(value=2.0),
+            Expr.Literal(value=3.0),
+            Expr.Literal(value=2.0),
         )
     )

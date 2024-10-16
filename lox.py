@@ -5,10 +5,12 @@ from interpreter import Interpreter
 from scanner import Scanner
 from parser import Parser
 
+import logging
 import sys
 
 
 def main(argv):
+    logging.basicConfig(format="%(name)s %(levelname)s: %(message)s")
     if len(argv) > 2:
         raise SystemExit("Usage lox.py filename")
 
@@ -44,11 +46,12 @@ def run(context):
     context.tokens = scanner.scan_tokens()
 
     parser = Parser(context)
-    stmts = parser.statements()
+    stmts = parser.parse()
 
     if context.has_error:
         return
 
+    assert stmts is not None  # Would have raised an exception
     Interpreter(context).interpret(stmts)
 
 
@@ -62,8 +65,6 @@ def test_run(src):
 
     parser = Parser(context)
     stmts = parser.statements()
-
-    print(stmts)
 
     if context.has_error:
         return

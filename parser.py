@@ -1,10 +1,11 @@
 # parser.py
 
 from context import Context
-import expression
 from tokens import Token
 from expression import *
 import statement as Stmt
+
+import logging
 
 
 class ParseError(Exception):
@@ -15,10 +16,8 @@ class ParseError(Exception):
 
     def __str__(self):
         if self.token.type == Token.Type.EOF:
-            return f"[Line {self.token.line}] Error at EOL, {self.message}"
-        return (
-            f"[Line {self.token.line}] Error at '{self.token.lexeme}', {self.message}"
-        )
+            return f"line {self.token.line + 1}, at EOL. {self.message}"
+        return f"line {self.token.line + 1}, at '{self.token.lexeme}'. {self.message}"
 
 
 class Parser:
@@ -35,13 +34,14 @@ class Parser:
         self.context = context
         self.tokens = context.tokens
         self.current = 0
+        self.logger = logging.getLogger("Lox.Parser")
 
     # Public functions
     def parse(self):
         try:
             return self.statements()
         except ParseError as e:
-            print(e)
+            self.logger.error(e)
             self.context.has_error = True
 
     def statements(self) -> list[Stmt.Statement]:

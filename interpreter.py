@@ -4,6 +4,8 @@ import expression as Expr
 import statement as Stmt
 from tokens import Token
 
+import logging
+
 
 class InterpreterError(Exception):
     def __init__(self, message):
@@ -18,7 +20,7 @@ class InterpreterTokenError(InterpreterError):
         self.message = message
 
     def __str__(self):
-        return f"[Line {self.token.line}] Error: {self.message}"
+        return f"line {self.token.line + 1}, {self.message}"
 
 
 class InterpreterExpressionError(InterpreterError):
@@ -28,7 +30,7 @@ class InterpreterExpressionError(InterpreterError):
         self.message = message
 
     def __str__(self):
-        return f"Error: {self.message} '{self.expression}'"
+        return f"{self.message} '{self.expression}'"
 
 
 class InterpreterStatementError(InterpreterError):
@@ -38,19 +40,20 @@ class InterpreterStatementError(InterpreterError):
         self.message = message
 
     def __str__(self):
-        return f"Error: {self.message} '{self.statement}'"
+        return f"{self.message} '{self.statement}'"
 
 
 class Interpreter:
     def __init__(self, context=None):
         self.context = context
+        self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
         try:
             self.execute_statements(statements)
 
         except InterpreterError as e:
-            print(e)
+            self.logger.error(e)
             if self.context:
                 self.context.has_runtime_error = True
 

@@ -2,7 +2,7 @@
 
 from context import Context
 from tokens import Token
-from expression import *
+import expression as Expr
 import statement as Stmt
 
 import logging
@@ -51,7 +51,7 @@ class Parser:
 
         return statements
 
-    def expression(self) -> Expression:
+    def expression(self) -> Expr.Expression:
         return self.equality()
 
     def statement(self) -> Stmt.Statement:
@@ -97,17 +97,17 @@ class Parser:
         return self.peek().type == Token.Type.EOF
 
     # Parse Expressions
-    def equality(self) -> Expression:
+    def equality(self) -> Expr.Expression:
         lhs = self.comparison()
 
         while self.match_any([Token.Type.BANG_EQUAL, Token.Type.EQUAL_EQUAL]):
             op = self.previous()
             rhs = self.comparison()
-            lhs = Binary(op, lhs, rhs)
+            lhs = Expr.Binary(op, lhs, rhs)
 
         return lhs
 
-    def comparison(self) -> Expression:
+    def comparison(self) -> Expr.Expression:
         lhs = self.term()
 
         while self.match_any(
@@ -120,57 +120,57 @@ class Parser:
         ):
             op = self.previous()
             rhs = self.term()
-            lhs = Binary(op, lhs, rhs)
+            lhs = Expr.Binary(op, lhs, rhs)
 
         return lhs
 
-    def term(self) -> Expression:
+    def term(self) -> Expr.Expression:
         lhs = self.factor()
 
         while self.match_any([Token.Type.MINUS, Token.Type.PLUS]):
             op = self.previous()
             rhs = self.factor()
-            lhs = Binary(op, lhs, rhs)
+            lhs = Expr.Binary(op, lhs, rhs)
 
         return lhs
 
-    def factor(self) -> Expression:
+    def factor(self) -> Expr.Expression:
         lhs = self.unary()
 
         while self.match_any([Token.Type.STAR, Token.Type.SLASH]):
             op = self.previous()
             rhs = self.unary()
-            lhs = Binary(op, lhs, rhs)
+            lhs = Expr.Binary(op, lhs, rhs)
 
         return lhs
 
-    def unary(self) -> Expression:
+    def unary(self) -> Expr.Expression:
         if self.match_any([Token.Type.BANG, Token.Type.MINUS]):
             op = self.previous()
             rhs = self.unary()
 
-            return Unary(op, rhs)
+            return Expr.Unary(op, rhs)
 
         return self.primary()
 
-    def primary(self) -> Expression:
+    def primary(self) -> Expr.Expression:
         if self.match(Token.Type.FALSE):
-            return Literal(False)
+            return Expr.Literal(False)
 
         if self.match(Token.Type.TRUE):
-            return Literal(True)
+            return Expr.Literal(True)
 
         if self.match(Token.Type.NIL):
-            return Literal(None)
+            return Expr.Literal(None)
 
         if self.match_any([Token.Type.NUMBER, Token.Type.STRING]):
-            return Literal(self.previous().literal)
+            return Expr.Literal(self.previous().literal)
 
         if self.match(Token.Type.LEFT_PAREN):
             expr = self.expression()
             self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after expression")
 
-            return Grouping(expr)
+            return Expr.Grouping(expr)
 
         raise ParseError(self.peek(), "Expect expression")
 

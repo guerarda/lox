@@ -1,5 +1,4 @@
 from tokens import Token
-from context import Context
 
 
 class Scanner:

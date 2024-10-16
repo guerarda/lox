@@ -3,11 +3,26 @@ import unittest
 from astprinter import ASTPrinter
 from context import Context
 from interpreter import Interpreter, InterpreterError
-from parser import ParseError, Parser
+from parser import ParseError
 from scanner import Scanner
 from tokens import Token
 import expression as Expr
 import lox as Lox
+
+import sys
+from contextlib import contextmanager
+from io import StringIO
+
+
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 class TestScanner(unittest.TestCase):
@@ -138,13 +153,25 @@ class TestLox(unittest.TestCase):
             Lox.test_run("(()")
 
     def test_expression(self):
-        self.assertTrue(Lox.test_run("print 1 == 1;"))
-        self.assertFalse(Lox.test_run("1 == 2;"))
+        with captured_output() as (out, _):
+            Lox.test_run("print 1==1;")
+            self.assertRegex(out.getvalue(), "true")
 
-        self.assertTrue(Lox.test_run("1 != 2;"))
-        self.assertTrue(Lox.test_run("2.5 > 1.2;"))
+        with captured_output() as (out, _):
+            Lox.test_run("print 1 == 2;")
+            self.assertRegex(out.getvalue(), "false")
 
-        self.assertTrue(Lox.test_run("(123 == (100 + 23)) != false;"))
+        with captured_output() as (out, _):
+            Lox.test_run("print 1 != 2;")
+            self.assertRegex(out.getvalue(), "true")
+
+        with captured_output() as (out, _):
+            Lox.test_run("print 2.5 > 1.2;")
+            self.assertRegex(out.getvalue(), "true")
+
+        with captured_output() as (out, _):
+            Lox.test_run("print (123 == (100 + 23)) != false;")
+            self.assertRegex(out.getvalue(), "true")
 
 
 if __name__ == "__main__":

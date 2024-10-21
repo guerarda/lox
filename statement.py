@@ -26,3 +26,8 @@ class Print(Statement):
 class Var(Statement):
     name: Token
     initializer: Expr.Expression | None
+
+
+@dataclass
+class Block(Statement):
+    statements: list[Statement]

@@ -58,14 +58,14 @@ class Parser:
     # Private Functions
     # Look for specific token types
     def match(self, token: Token.Type) -> bool:
-        if self.tokens[self.current].type == token:
+        if self.peek().type == token:
             self.advance()
             return True
 
         return False
 
     def match_any(self, tokens: list[Token.Type]):
-        if self.tokens[self.current].type in tokens:
+        if self.peek().type in tokens:
             self.advance()
             return True
 
@@ -195,14 +195,27 @@ class Parser:
     def statement(self) -> Stmt.Statement:
         if self.match(Token.Type.PRINT):
             return self.print_stmt()
+
+        if self.match(Token.Type.LEFT_BRACE):
+            return self.block_stmt()
+
         return self.expression_stmt()
 
-    def print_stmt(self) -> Stmt.Statement:
+    def block_stmt(self) -> Stmt.Block:
+        stmts = []
+
+        while not self.peek().type == Token.Type.RIGHT_BRACE and not self.is_at_end():
+            stmts.append(self.declaration())
+
+        self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after block")
+        return Stmt.Block(stmts)
+
+    def print_stmt(self) -> Stmt.Print:
         expr = self.expression()
         self.expect(Token.Type.SEMICOLON, "Expect ';' after value")
         return Stmt.Print(expr)
 
-    def expression_stmt(self):
+    def expression_stmt(self) -> Stmt.Expression:
         expr = self.expression()
         self.expect(Token.Type.SEMICOLON, "Expect ';' after expression")
         return Stmt.Expression(expr)

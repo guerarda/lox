@@ -214,12 +214,19 @@ class Interpreter:
                 self.evaluate(expr)
 
             case Stmt.Var(name, initializer):
-
                 value = None
                 if initializer is not None:
                     value = self.evaluate(initializer)
 
                 self.environment.define(name.lexeme, value)
+
+            case Stmt.Block(stmts):
+                previous = self.environment
+                try:
+                    self.environment = Environment(previous)
+                    self.execute_statements(stmts)
+                finally:
+                    self.environment = previous
 
             case _:
                 raise InterpreterStatementError(

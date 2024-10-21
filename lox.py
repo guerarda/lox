@@ -25,7 +25,8 @@ def main(argv):
 
 def run_file(path):
     with open(path) as file:
-        context = Context(file)
+        context = Context(file.read())
+
         run(context)
 
         if context.has_error:

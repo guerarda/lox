@@ -3,9 +3,11 @@ import unittest
 from astprinter import ASTPrinter
 from context import Context
 from interpreter import Interpreter, InterpreterError
+from loxerrors import LoxError
 from parser import ParseError
 from scanner import Scanner
 from tokens import Token
+
 import expression as Expr
 import lox as Lox
 
@@ -146,6 +148,11 @@ class TestInterpreter(unittest.TestCase):
 
 class TestLox(unittest.TestCase):
     def test_parsing(self):
+        with captured_output() as (out, _):
+            Lox.test_run("var a = 2;")
+            Lox.test_run("print a;")
+            self.assertRegex(out.getvalue().splitlines()[-1], "2.0")
+
         with self.assertRaises(ParseError):
             Lox.test_run("1 ++ 2")
 
@@ -172,6 +179,16 @@ class TestLox(unittest.TestCase):
         with captured_output() as (out, _):
             Lox.test_run("print (123 == (100 + 23)) != false;")
             self.assertRegex(out.getvalue(), "true")
+
+    def test_variable(self):
+        with self.assertRaises(LoxError):
+            Lox.test_run("b = 2;")
+
+        with captured_output() as (out, _):
+            Lox.test_run("var a;")
+            Lox.test_run("a = 2;")
+            Lox.test_run("print a;")
+            self.assertRegex(out.getvalue().splitlines()[-1], "2.0")
 
 
 if __name__ == "__main__":

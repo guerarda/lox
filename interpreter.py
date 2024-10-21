@@ -1,10 +1,12 @@
 # interpreter
 
-import expression as Expr
-import statement as Stmt
+from environment import Environment
 from loxerrors import LoxError
 from formatter import Formatter
 from tokens import Token
+
+import expression as Expr
+import statement as Stmt
 
 import logging
 
@@ -47,16 +49,18 @@ class InterpreterStatementError(InterpreterError):
 class Interpreter:
     def __init__(self, context=None):
         self.context = context
+        self.environment = Environment()
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
         try:
             self.execute_statements(statements)
 
-        except InterpreterError as e:
+        except LoxError as e:
             self.logger.error(e)
             if self.context:
                 self.context.has_runtime_error = True
+            raise e
 
     # Private functions
     def is_truthy(self, obj) -> bool:
@@ -90,6 +94,7 @@ class Interpreter:
             case _:
                 return value
 
+    # Interpreting Expressions
     def evaluate(self, expression: Expr.Expression):
         match expression:
             case Expr.Literal():
@@ -188,11 +193,18 @@ class Interpreter:
             case Expr.Grouping(expr):
                 return self.evaluate(expr)
 
+            case Expr.Variable(name):
+                return self.environment.get(name)
+
+            case Expr.Assignment(name, value):
+                self.environment.assign(name, self.evaluate(value))
+
             case _:
                 raise InterpreterExpressionError(
                     expression, "Could not evaluate Expression"
                 )
 
+    # Executing Statements
     def execute(self, statement: Stmt.Statement):
         match statement:
             case Stmt.Print(expr):
@@ -200,6 +212,14 @@ class Interpreter:
 
             case Stmt.Expression(expr):
                 self.evaluate(expr)
+
+            case Stmt.Var(name, initializer):
+
+                value = None
+                if initializer is not None:
+                    value = self.evaluate(initializer)
+
+                self.environment.define(name.lexeme, value)
 
             case _:
                 raise InterpreterStatementError(

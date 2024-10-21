@@ -8,6 +8,8 @@ from parser import Parser
 import logging
 import sys
 
+LOX_INTERPRETER = Interpreter()
+
 
 def main(argv):
     logging.basicConfig(format="%(name)s %(levelname)s: %(message)s")
@@ -53,24 +55,26 @@ def run(context):
         return
 
     assert stmts is not None  # Would have raised an exception
-    Interpreter(context).interpret(stmts)
+    LOX_INTERPRETER.context = context
+    LOX_INTERPRETER.interpret(stmts)
 
 
 def test_run(src):
     """Same as run() but we use function that don't try to catch
     exceptions so we can catch them in the tests.
     """
-    context = Context(src)
-    scanner = Scanner(context)
-    context.tokens = scanner.scan_tokens()
+    LOX_INTERPRETER.context = Context(src)
+    scanner = Scanner(LOX_INTERPRETER.context)
 
-    parser = Parser(context)
+    LOX_INTERPRETER.context.tokens = scanner.scan_tokens()
+
+    parser = Parser(LOX_INTERPRETER.context)
     stmts = parser.statements()
 
-    if context.has_error:
+    if LOX_INTERPRETER.context.has_error:
         return
 
-    return Interpreter(context).execute_statements(stmts)
+    return LOX_INTERPRETER.execute_statements(stmts)
 
 
 if __name__ == "__main__":

@@ -36,3 +36,9 @@ class Unary(Expression):
 @dataclass
 class Variable(Expression):
     name: Token
+
+
+@dataclass
+class Assignment(Expression):
+    name: Token
+    value: Expression

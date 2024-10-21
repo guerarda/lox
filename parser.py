@@ -53,12 +53,7 @@ class Parser:
         return statements
 
     def expression(self) -> Expr.Expression:
-        return self.equality()
-
-    def declaration(self) -> Stmt.Statement:
-        if self.match(Token.Type.VAR):
-            return self.var_decl()
-        return self.statement()
+        return self.assignment()
 
     # Private Functions
     # Look for specific token types
@@ -98,6 +93,20 @@ class Parser:
         return self.peek().type == Token.Type.EOF
 
     # Parse Expressions
+    def assignment(self) -> Expr.Expression:
+        expr = self.equality()
+
+        if self.match(Token.Type.EQUAL):
+            equal = self.previous()
+            value = self.assignment()
+
+            if isinstance(expr, Expr.Variable):
+                return Expr.Assignment(expr.name, value)
+
+            raise ParseError(equal, "Invalid assigment target")
+
+        return expr
+
     def equality(self) -> Expr.Expression:
         lhs = self.comparison()
 
@@ -178,6 +187,11 @@ class Parser:
         raise ParseError(self.peek(), "Expect expression")
 
     # Parse Statements
+    def declaration(self) -> Stmt.Statement:
+        if self.match(Token.Type.VAR):
+            return self.var_decl()
+        return self.statement()
+
     def statement(self) -> Stmt.Statement:
         if self.match(Token.Type.PRINT):
             return self.print_stmt()

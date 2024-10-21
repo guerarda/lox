@@ -1,4 +1,4 @@
-# interpreted
+# interpreter
 
 import expression as Expr
 import statement as Stmt

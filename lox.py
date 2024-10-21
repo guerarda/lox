@@ -34,6 +34,7 @@ def run_file(path):
 
 
 def run_prompt():
+    print("Lox Interpreter")
     while True:
         source = input("> ")
         context = Context(source)

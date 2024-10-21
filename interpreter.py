@@ -2,16 +2,15 @@
 
 import expression as Expr
 import statement as Stmt
+from loxerrors import LoxError
 from formatter import Formatter
 from tokens import Token
 
 import logging
 
 
-class InterpreterError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-        self.message = message
+class InterpreterError(LoxError):
+    pass
 
 
 class InterpreterTokenError(InterpreterError):

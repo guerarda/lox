@@ -1,6 +1,7 @@
 # parser.py
 
 from context import Context
+from loxerrors import LoxError
 from tokens import Token
 import expression as Expr
 import statement as Stmt
@@ -8,7 +9,7 @@ import statement as Stmt
 import logging
 
 
-class ParseError(Exception):
+class ParseError(LoxError):
     def __init__(self, token, message):
         super().__init__(message)
         self.message = message

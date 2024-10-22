@@ -234,5 +234,13 @@ class Interpreter:
             self.execute(stmt)
 
 
+class REPLInterpreter(Interpreter):
+    def execute(self, statement: Stmt.Statement):
+        if isinstance(statement, Stmt.Expression):
+            print(self.stringify(self.evaluate(statement.expression)))
+        else:
+            super().execute(statement)
+
+
 if __name__ == "__main__":
     Interpreter().interpret([Stmt.Print(Expr.Literal(2.0))])

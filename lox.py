@@ -5,7 +5,7 @@ import sys
 
 from environment import Environment
 from errors import LoxError, LoxRuntimeError
-from interpreter import Interpreter
+from interpreter import Interpreter, REPLInterpreter
 from parser import Parser
 from scanner import Scanner
 
@@ -28,7 +28,7 @@ def main(argv):
 
 def run_file(path):
     with open(path) as file:
-        run(file.read())
+        run_catch_errors(file.read())
 
         if has_error:
             exit(65)
@@ -41,7 +41,7 @@ def run_prompt():
     print("Lox Interpreter")
     while True:
         source = input("> ")
-        run_catch_errors(source)
+        run_catch_errors(source, True)
         global has_error
         has_error = False
 
@@ -49,15 +49,15 @@ def run_prompt():
         has_runtime_error = False
 
 
-def run_catch_errors(source):
+def run_catch_errors(source: str, is_repl: bool = False):
     try:
-        run(source)
+        run(source, is_repl)
 
     except LoxError:
         return
 
 
-def run(source: str):
+def run(source: str, is_repl: bool):
     try:
         scanner = Scanner(source)
         parser = Parser(scanner.scan_tokens())
@@ -74,7 +74,11 @@ def run(source: str):
         raise e
 
     assert stmts is not None  # Would have raised an exception
-    Interpreter(global_environment).interpret(stmts)
+
+    if is_repl:
+        REPLInterpreter(global_environment).interpret(stmts)
+    else:
+        Interpreter(global_environment).interpret(stmts)
 
 
 if __name__ == "__main__":

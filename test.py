@@ -1,5 +1,6 @@
 # tests
 
+import logging
 import sys
 import unittest
 from contextlib import contextmanager
@@ -10,7 +11,6 @@ import lox as Lox
 from astprinter import ASTPrinter
 from errors import LoxError
 from interpreter import Interpreter, InterpreterError
-from parser import ParseError
 from scanner import Scanner
 from tokens import Token
 
@@ -28,7 +28,7 @@ def captured_output():
 
 class TestScanner(unittest.TestCase):
     def test_operators(self):
-        tokens = Scanner(Context("- + == != =")).scan_tokens()
+        tokens = Scanner("- + == != =").scan_tokens()
 
         self.assertEqual(len(tokens), 6)
         self.assertEqual(tokens[0].type, Token.Type.MINUS)
@@ -40,7 +40,7 @@ class TestScanner(unittest.TestCase):
 
     def test_string(self):
         src = "this is a string"
-        tokens = Scanner(Context(f'"{src}"')).scan_tokens()
+        tokens = Scanner(f'"{src}"').scan_tokens()
 
         self.assertEqual(len(tokens), 2)
         self.assertEqual(tokens[0].type, Token.Type.STRING)
@@ -50,7 +50,7 @@ class TestScanner(unittest.TestCase):
     def test_number(self):
         nums = [123, 123.456, 1321453563453543, 1.4832749832]
         src = " ".join(str(n) for n in nums)
-        tokens = Scanner(Context(src)).scan_tokens()
+        tokens = Scanner(src).scan_tokens()
 
         self.assertEqual(len(tokens), len(nums) + 1)
         self.assertEqual(tokens[-1].type, Token.Type.EOF)
@@ -60,7 +60,7 @@ class TestScanner(unittest.TestCase):
 
     def test_identifer(self):
         src = "var" " variable" " my_function" " _my_var" " my1337"
-        tokens = Scanner(Context(src)).scan_tokens()
+        tokens = Scanner(src).scan_tokens()
 
         self.assertEqual(len(tokens), 6)
         self.assertEqual(tokens[-1].type, Token.Type.EOF)
@@ -148,47 +148,49 @@ class TestInterpreter(unittest.TestCase):
 class TestLox(unittest.TestCase):
     def test_parsing(self):
         with captured_output() as (out, _):
-            Lox.test_run("var a = 2;")
-            Lox.test_run("print a;")
+            Lox.run("var a = 2;")
+            Lox.run("print a;")
             self.assertRegex(out.getvalue().splitlines()[-1], "2.0")
 
-        with self.assertRaises(ParseError):
-            Lox.test_run("1 ++ 2")
+        with self.assertRaises(LoxError):
+            Lox.run("1 ++ 2;")
 
-        with self.assertRaises(ParseError):
-            Lox.test_run("(()")
+        with self.assertRaises(LoxError):
+            Lox.run("(()")
 
     def test_expression(self):
         with captured_output() as (out, _):
-            Lox.test_run("print 1==1;")
+            Lox.run("print 1==1;")
             self.assertRegex(out.getvalue(), "true")
 
         with captured_output() as (out, _):
-            Lox.test_run("print 1 == 2;")
+            Lox.run("print 1 == 2;")
             self.assertRegex(out.getvalue(), "false")
 
         with captured_output() as (out, _):
-            Lox.test_run("print 1 != 2;")
+            Lox.run("print 1 != 2;")
             self.assertRegex(out.getvalue(), "true")
 
         with captured_output() as (out, _):
-            Lox.test_run("print 2.5 > 1.2;")
+            Lox.run("print 2.5 > 1.2;")
             self.assertRegex(out.getvalue(), "true")
 
         with captured_output() as (out, _):
-            Lox.test_run("print (123 == (100 + 23)) != false;")
+            Lox.run("print (123 == (100 + 23)) != false;")
             self.assertRegex(out.getvalue(), "true")
 
     def test_variable(self):
         with self.assertRaises(LoxError):
-            Lox.test_run("b = 2;")
+            Lox.run("b = 2;")
 
         with captured_output() as (out, _):
-            Lox.test_run("var a;")
-            Lox.test_run("a = 2;")
-            Lox.test_run("print a;")
+            Lox.run("var a;")
+            Lox.run("a = 2;")
+            Lox.run("print a;")
             self.assertRegex(out.getvalue().splitlines()[-1], "2.0")
 
 
 if __name__ == "__main__":
+    logging.disable(logging.CRITICAL)
     unittest.main()
+    logging.disable(logging.NOTSET)

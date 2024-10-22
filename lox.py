@@ -57,7 +57,7 @@ def run_catch_errors(source: str, is_repl: bool = False):
         return
 
 
-def run(source: str, is_repl: bool):
+def run(source: str, is_repl: bool = False):
     try:
         scanner = Scanner(source)
         parser = Parser(scanner.scan_tokens())

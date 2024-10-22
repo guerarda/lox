@@ -1,8 +1,8 @@
-# expression.py
-
-from tokens import Token
+# expression
 
 from dataclasses import dataclass
+
+from tokens import Token
 
 
 class Expression:

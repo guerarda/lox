@@ -1,8 +1,7 @@
 # tokens.py
 
-from enum import auto, Enum
-
 from dataclasses import dataclass
+from enum import Enum, auto
 
 
 @dataclass

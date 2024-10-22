@@ -1,19 +1,18 @@
-import unittest
+# tests
 
-from astprinter import ASTPrinter
-from context import Context
-from interpreter import Interpreter, InterpreterError
-from loxerrors import LoxError
-from parser import ParseError
-from scanner import Scanner
-from tokens import Token
+import sys
+import unittest
+from contextlib import contextmanager
+from io import StringIO
 
 import expression as Expr
 import lox as Lox
-
-import sys
-from contextlib import contextmanager
-from io import StringIO
+from astprinter import ASTPrinter
+from errors import LoxError
+from interpreter import Interpreter, InterpreterError
+from parser import ParseError
+from scanner import Scanner
+from tokens import Token
 
 
 @contextmanager

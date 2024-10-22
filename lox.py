@@ -3,11 +3,11 @@
 import logging
 import sys
 
-from .environment import Environment
-from .interpreter import Interpreter
-from .loxerrors import LoxError, LoxRuntimeError
-from .parser import Parser
-from .scanner import Scanner
+from environment import Environment
+from errors import LoxError, LoxRuntimeError
+from interpreter import Interpreter
+from parser import Parser
+from scanner import Scanner
 
 global_environment = Environment()
 has_error = False

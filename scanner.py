@@ -1,9 +1,9 @@
 # scanner
 
-from loxerrors import LoxError
-from tokens import Token
-
 import logging
+
+from errors import LoxError
+from tokens import Token
 
 
 class ScannerError(LoxError):

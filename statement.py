@@ -1,10 +1,9 @@
 # statement
 
-import expression as Expr
-
-from tokens import Token
-
 from dataclasses import dataclass
+
+import expression as Expr
+from tokens import Token
 
 
 class Statement:

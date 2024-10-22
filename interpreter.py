@@ -1,12 +1,12 @@
 # interpreter
 
 import logging
+from formatter import Formatter
 
 import expression as Expr
 import statement as Stmt
 from environment import Environment
-from formatter import Formatter
-from loxerrors import LoxError
+from errors import LoxError
 from tokens import Token
 
 

@@ -4,8 +4,8 @@ import logging
 
 import expression as Expr
 import statement as Stmt
-from loxerrors import LoxError
-from .tokens import Token
+from errors import LoxError
+from tokens import Token
 
 
 class ParseError(LoxError):

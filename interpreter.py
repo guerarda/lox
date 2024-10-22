@@ -1,14 +1,13 @@
 # interpreter
 
-from environment import Environment
-from loxerrors import LoxError
-from formatter import Formatter
-from tokens import Token
+import logging
 
 import expression as Expr
 import statement as Stmt
-
-import logging
+from environment import Environment
+from formatter import Formatter
+from loxerrors import LoxError
+from tokens import Token
 
 
 class InterpreterError(LoxError):
@@ -47,9 +46,8 @@ class InterpreterStatementError(InterpreterError):
 
 
 class Interpreter:
-    def __init__(self, context=None):
-        self.context = context
-        self.environment = Environment()
+    def __init__(self, environment: Environment | None = None):
+        self.environment = environment if environment is not None else Environment()
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
@@ -58,8 +56,6 @@ class Interpreter:
 
         except LoxError as e:
             self.logger.error(e)
-            if self.context:
-                self.context.has_runtime_error = True
             raise e
 
     # Private functions
@@ -222,11 +218,11 @@ class Interpreter:
 
             case Stmt.Block(stmts):
                 previous = self.environment
-                try:
-                    self.environment = Environment(previous)
-                    self.execute_statements(stmts)
-                finally:
-                    self.environment = previous
+
+                self.environment = Environment(previous)
+                self.execute_statements(stmts)
+
+                self.environment = previous
 
             case _:
                 raise InterpreterStatementError(

@@ -2,8 +2,6 @@
 
 import expression as Expr
 import statement as Stmt
-
-from context import Context
 from parser import Parser
 from scanner import Scanner
 
@@ -70,12 +68,7 @@ class Formatter:
 if __name__ == "__main__":
     src = "print (   123.0000 == (100+ 23))!=false;"
 
-    context = Context(src)
-    scanner = Scanner(context)
-    context.tokens = scanner.scan_tokens()
-
-    parser = Parser(context)
-    stmts = parser.parse()
+    stmts = Parser(Scanner(src).scan_tokens()).parse()
 
     assert stmts is not None
     print(Formatter().format(stmts))

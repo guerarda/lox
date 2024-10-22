@@ -1,12 +1,11 @@
 # parser.py
 
-from context import Context
-from loxerrors import LoxError
-from tokens import Token
+import logging
+
 import expression as Expr
 import statement as Stmt
-
-import logging
+from loxerrors import LoxError
+from .tokens import Token
 
 
 class ParseError(LoxError):
@@ -25,15 +24,8 @@ class Parser:
     """Parse a list of AST Tokens and returns a corresponding
     Expression"""
 
-    @classmethod
-    def parse_tokens(cls, tokens: list[Token]):
-        ctx = Context()
-        ctx.tokens = tokens
-        return cls(ctx).parse()
-
-    def __init__(self, context: Context):
-        self.context = context
-        self.tokens = context.tokens
+    def __init__(self, tokens: list[Token]):
+        self.tokens = tokens
         self.current = 0
         self.logger = logging.getLogger("Lox.Parser")
 
@@ -43,7 +35,7 @@ class Parser:
             return self.statements()
         except ParseError as e:
             self.logger.error(e)
-            self.context.has_error = True
+            raise e
 
     def statements(self) -> list[Stmt.Statement]:
         statements = []

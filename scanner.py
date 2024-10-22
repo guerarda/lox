@@ -1,4 +1,20 @@
+# scanner
+
+from loxerrors import LoxError
 from tokens import Token
+
+import logging
+
+
+class ScannerError(LoxError):
+    def __init__(self, line, char, message):
+        super().__init__(message)
+        self.message = message
+        self.line = line
+        self.char = char
+
+    def __str__(self):
+        return f"line {self.line + 1}, at '{self.char}'. {self.message}"
 
 
 class Scanner:
@@ -21,20 +37,25 @@ class Scanner:
         "while": Token.Type.WHILE,
     }
 
-    def __init__(self, context):
-        self.context = context
-        self.source = context.source
+    def __init__(self, source: str):
+        self.source = source
         self.start = 0  # Index of the first char in the current lexeme.
         self.current = 0  # Index of the char being scanned.
         self.line = 0
         self.tokens = []
+        self.logger = logging.getLogger("Lox.Scanner")
 
-    def scan_tokens(self) -> list[Token]:
-        while not self.is_at_end():
-            self.start = self.current
-            self.scan_token()
+    def scan_tokens(self):
+        try:
+            while not self.is_at_end():
+                self.start = self.current
+                self.scan_token()
 
-        # Enf of file
+        except ScannerError as e:
+            self.logger.error(e)
+            raise e
+
+        # End of file
         self.tokens.append(Token(Token.Type.EOF, "", None, self.line))
 
         return self.tokens
@@ -123,7 +144,7 @@ class Scanner:
                 self.add_identifier()
 
             case _:
-                self.context.error(self.line, "Unexpected character")
+                raise ScannerError(self.line, c, "Unexpected character")
 
     def add_string(self):
         while self.peek() != '"' and not self.is_at_end():
@@ -133,8 +154,7 @@ class Scanner:
             self.advance()
 
         if self.is_at_end():
-            self.context.error(self.line, "Unterminated string")
-            return
+            raise ScannerError(self.line, "EOF", "Unterminated string")
 
         self.advance()  # Consume closing quote
 

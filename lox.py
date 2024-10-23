@@ -58,18 +58,22 @@ def run_catch_errors(source: str, is_repl: bool = False):
 
 
 def run(source: str, is_repl: bool = False):
+    global has_error
+    global has_runtime_error
     try:
         scanner = Scanner(source)
         parser = Parser(scanner.scan_tokens())
         stmts = parser.parse()
 
+        if parser.has_error:
+            has_error = True
+            return
+
     except LoxRuntimeError as e:
-        global has_runtime_error
         has_runtime_error = True
         raise e
 
     except LoxError as e:
-        global has_error
         has_error = True
         raise e
 

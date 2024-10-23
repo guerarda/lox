@@ -26,6 +26,16 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 
+class SilencedLogsTestCase(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self) -> None:
+        logging.disable(logging.NOTSET)
+        super().tearDown()
+
+
 class TestScanner(unittest.TestCase):
     def test_operators(self):
         tokens = Scanner("- + == != =").scan_tokens()
@@ -145,18 +155,23 @@ class TestInterpreter(unittest.TestCase):
             )
 
 
-class TestLox(unittest.TestCase):
+class TestLogOutput(unittest.TestCase):
+    def test_parsing(self):
+        with self.assertLogs("Lox.Parser", "ERROR") as cm:
+            Lox.run("1 ++ 2;")
+            self.assertTrue(any("ERROR" in msg for msg in cm.output))
+
+        with self.assertLogs("Lox.Parser", "ERROR") as cm:
+            Lox.run("(()")
+            self.assertTrue(any("ERROR" in msg for msg in cm.output))
+
+
+class TestLox(SilencedLogsTestCase):
     def test_parsing(self):
         with captured_output() as (out, _):
             Lox.run("var a = 2;")
             Lox.run("print a;")
             self.assertRegex(out.getvalue().splitlines()[-1], "2.0")
-
-        with self.assertRaises(LoxError):
-            Lox.run("1 ++ 2;")
-
-        with self.assertRaises(LoxError):
-            Lox.run("(()")
 
     def test_expression(self):
         with captured_output() as (out, _):
@@ -191,6 +206,4 @@ class TestLox(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    logging.disable(logging.CRITICAL)
     unittest.main()
-    logging.disable(logging.NOTSET)

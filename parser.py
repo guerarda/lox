@@ -22,20 +22,17 @@ class ParseError(LoxError):
 
 class Parser:
     """Parse a list of AST Tokens and returns a corresponding
-    Expression"""
+    list of Statements"""
 
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens
         self.current = 0
+        self.has_error = False
         self.logger = logging.getLogger("Lox.Parser")
 
     # Public functions
     def parse(self):
-        try:
-            return self.statements()
-        except ParseError as e:
-            self.logger.error(e)
-            raise e
+        return self.statements()
 
     def statements(self) -> list[Stmt.Statement]:
         statements = []
@@ -48,6 +45,26 @@ class Parser:
         return self.assignment()
 
     # Private Functions
+    def synchronize(self):
+        self.advance()
+
+        while not self.is_at_end():
+            if self.previous().type == Token.Type.SEMICOLON:
+                return
+
+            if self.peek().type in [
+                Token.Type.CLASS,
+                Token.Type.FOR,
+                Token.Type.FUN,
+                Token.Type.IF,
+                Token.Type.PRINT,
+                Token.Type.RETURN,
+                Token.Type.VAR,
+                Token.Type.WHILE,
+            ]:
+                return
+            self.advance()
+
     # Look for specific token types
     def match(self, token: Token.Type) -> bool:
         if self.peek().type == token:
@@ -179,10 +196,16 @@ class Parser:
         raise ParseError(self.peek(), "Expect expression")
 
     # Parse Statements
-    def declaration(self) -> Stmt.Statement:
-        if self.match(Token.Type.VAR):
-            return self.var_decl()
-        return self.statement()
+    def declaration(self) -> Stmt.Statement | None:
+        try:
+            if self.match(Token.Type.VAR):
+                return self.var_decl()
+            return self.statement()
+
+        except ParseError as e:
+            self.has_error = True
+            self.logger.error(e)
+            self.synchronize()
 
     def statement(self) -> Stmt.Statement:
         if self.match(Token.Type.PRINT):

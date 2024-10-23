@@ -228,6 +228,9 @@ class Parser:
             self.synchronize()
 
     def statement(self) -> Stmt.Statement:
+        if self.match(Token.Type.FOR):
+            return self.for_stmt()
+
         if self.match(Token.Type.IF):
             return self.if_stmt()
 
@@ -253,6 +256,43 @@ class Parser:
         self.expect(Token.Type.SEMICOLON, "Expect ';' after variable declaration")
         return Stmt.Var(name, initializer)
 
+    def for_stmt(self) -> Stmt.Statement:
+        self.expect(Token.Type.LEFT_PAREN, "Expect '(' after for")
+
+        initializer = None
+        if self.match(Token.Type.SEMICOLON):
+            pass
+        elif self.match(Token.Type.VAR):
+            initializer = self.var_decl()
+        else:
+            initializer = self.expression_stmt()
+        # Statement eats the next ';'
+
+        cond = None
+        if not self.peek().type == Token.Type.SEMICOLON:
+            cond = self.expression()
+        self.expect(Token.Type.SEMICOLON, "Expect ';' after condition")
+
+        inc = None
+        if not self.peek().type == Token.Type.RIGHT_PAREN:
+            inc = self.expression()
+        self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after for clauses")
+
+        # Build the while-loop
+        loop = Stmt.While(
+            cond if cond is not None else Expr.Literal(True),
+            (
+                self.statement()
+                if inc is None
+                else Stmt.Block([Stmt.Expression(inc), self.statement()])
+            ),
+        )
+
+        if initializer is None:
+            return loop
+
+        return Stmt.Block([initializer, loop])
+
     def if_stmt(self) -> Stmt.If:
         self.expect(Token.Type.LEFT_PAREN, "Expect '(' after if")
         condition = self.expression()
@@ -270,7 +310,7 @@ class Parser:
         self.expect(Token.Type.SEMICOLON, "Expect ';' after value")
         return Stmt.Print(expr)
 
-    def while_stmt(self):
+    def while_stmt(self) -> Stmt.While:
         self.expect(Token.Type.LEFT_PAREN, "Expect '(' after while")
         cond = self.expression()
         self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after condition")

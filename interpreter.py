@@ -242,6 +242,10 @@ class Interpreter:
                 elif alt is not None:
                     self.execute(alt)
 
+            case Stmt.While(cond, body):
+                while self.is_truthy(self.evaluate(cond)):
+                    self.execute(body)
+
             case _:
                 raise InterpreterStatementError(
                     statement, "Could not execute Statement"

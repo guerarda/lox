@@ -36,3 +36,8 @@ class If(Statement):
     condition: Expr.Expression
     consequence: Statement
     alternative: Statement | None
+
+@dataclass
+class While(Statement):
+    condition: Expr.Expression
+    body: Statement

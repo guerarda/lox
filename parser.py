@@ -230,22 +230,28 @@ class Parser:
     def statement(self) -> Stmt.Statement:
         if self.match(Token.Type.IF):
             return self.if_stmt()
+
         if self.match(Token.Type.PRINT):
             return self.print_stmt()
+
+        if self.match(Token.Type.WHILE):
+            return self.while_stmt()
 
         if self.match(Token.Type.LEFT_BRACE):
             return self.block_stmt()
 
         return self.expression_stmt()
 
-    def block_stmt(self) -> Stmt.Block:
-        stmts = []
+    def var_decl(self) -> Stmt.Var:
+        self.expect(Token.Type.IDENTIFIER, "Expect variable name")
+        name = self.previous()
 
-        while not self.peek().type == Token.Type.RIGHT_BRACE and not self.is_at_end():
-            stmts.append(self.declaration())
+        initializer = None
+        if self.match(Token.Type.EQUAL):
+            initializer = self.expression()
 
-        self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after block")
-        return Stmt.Block(stmts)
+        self.expect(Token.Type.SEMICOLON, "Expect ';' after variable declaration")
+        return Stmt.Var(name, initializer)
 
     def if_stmt(self) -> Stmt.If:
         self.expect(Token.Type.LEFT_PAREN, "Expect '(' after if")
@@ -264,18 +270,26 @@ class Parser:
         self.expect(Token.Type.SEMICOLON, "Expect ';' after value")
         return Stmt.Print(expr)
 
+    def while_stmt(self):
+        self.expect(Token.Type.LEFT_PAREN, "Expect '(' after while")
+        cond = self.expression()
+        self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after condition")
+
+        body = self.declaration()
+        assert body is not None
+
+        return Stmt.While(cond, body)
+
+    def block_stmt(self) -> Stmt.Block:
+        stmts = []
+
+        while not self.peek().type == Token.Type.RIGHT_BRACE and not self.is_at_end():
+            stmts.append(self.declaration())
+
+        self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after block")
+        return Stmt.Block(stmts)
+
     def expression_stmt(self) -> Stmt.Expression:
         expr = self.expression()
         self.expect(Token.Type.SEMICOLON, "Expect ';' after expression")
         return Stmt.Expression(expr)
-
-    def var_decl(self) -> Stmt.Var:
-        self.expect(Token.Type.IDENTIFIER, "Expect variable name")
-        name = self.previous()
-
-        initializer = None
-        if self.match(Token.Type.EQUAL):
-            initializer = self.expression()
-
-        self.expect(Token.Type.SEMICOLON, "Expect ';' after variable declaration")
-        return Stmt.Var(name, initializer)

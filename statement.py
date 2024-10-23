@@ -30,3 +30,9 @@ class Var(Statement):
 @dataclass
 class Block(Statement):
     statements: list[Statement]
+
+@dataclass
+class If(Statement):
+    condition: Expr.Expression
+    consequence: Statement
+    alternative: Statement | None

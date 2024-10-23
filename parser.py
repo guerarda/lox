@@ -208,6 +208,8 @@ class Parser:
             self.synchronize()
 
     def statement(self) -> Stmt.Statement:
+        if self.match(Token.Type.IF):
+            return self.if_stmt()
         if self.match(Token.Type.PRINT):
             return self.print_stmt()
 
@@ -224,6 +226,18 @@ class Parser:
 
         self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after block")
         return Stmt.Block(stmts)
+
+    def if_stmt(self) -> Stmt.If:
+        self.expect(Token.Type.LEFT_PAREN, "Expect '(' after if")
+        condition = self.expression()
+        self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after condition")
+
+        consequence = self.statement()
+        alternative = None
+        if self.match(Token.Type.ELSE):
+            alternative = self.statement()
+
+        return Stmt.If(condition, consequence, alternative)
 
     def print_stmt(self) -> Stmt.Print:
         expr = self.expression()

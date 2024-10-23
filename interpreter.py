@@ -224,6 +224,12 @@ class Interpreter:
 
                 self.environment = previous
 
+            case Stmt.If(cond, conseq, alt):
+                if self.is_truthy(self.evaluate(cond)):
+                    self.execute(conseq)
+                elif alt is not None:
+                    self.execute(alt)
+
             case _:
                 raise InterpreterStatementError(
                     statement, "Could not execute Statement"

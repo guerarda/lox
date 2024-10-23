@@ -103,7 +103,7 @@ class Parser:
 
     # Parse Expressions
     def assignment(self) -> Expr.Expression:
-        expr = self.equality()
+        expr = self.logic_or()
 
         if self.match(Token.Type.EQUAL):
             equal = self.previous()
@@ -115,6 +115,26 @@ class Parser:
             raise ParseError(equal, "Invalid assigment target")
 
         return expr
+
+    def logic_or(self) -> Expr.Expression:
+        lhs = self.logic_and()
+
+        while self.match(Token.Type.OR):
+            op = self.previous()
+            rhs = self.logic_and()
+            lhs = Expr.Logical(op, lhs, rhs)
+
+        return lhs
+
+    def logic_and(self) -> Expr.Expression:
+        lhs = self.equality()
+
+        while self.match(Token.Type.AND):
+            op = self.previous()
+            rhs = self.equality()
+            lhs = Expr.Logical(op, lhs, rhs)
+
+        return lhs
 
     def equality(self) -> Expr.Expression:
         lhs = self.comparison()

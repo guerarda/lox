@@ -195,6 +195,18 @@ class Interpreter:
             case Expr.Assignment(name, value):
                 self.environment.assign(name, self.evaluate(value))
 
+            case Expr.Logical(Token.Type.OR, left, right):
+                lv = self.evaluate(left)
+                if self.is_truthy(lv):
+                    return lv
+                return self.evaluate(right)
+
+            case Expr.Logical(Token.Type.AND, left, right):
+                lv = self.evaluate(left)
+                if not self.is_truthy(lv):
+                    return lv
+                return self.evaluate(right)
+
             case _:
                 raise InterpreterExpressionError(
                     expression, "Could not evaluate Expression"

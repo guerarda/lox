@@ -42,3 +42,10 @@ class Variable(Expression):
 class Assignment(Expression):
     name: Token
     value: Expression
+
+
+@dataclass
+class Logical(Expression):
+    operator: Token
+    left: Expression
+    right: Expression

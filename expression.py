@@ -49,3 +49,10 @@ class Logical(Expression):
     operator: Token
     left: Expression
     right: Expression
+
+
+@dataclass
+class Call(Expression):
+    callee: Expression
+    paren: Token
+    args: list[Expression]

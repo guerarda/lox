@@ -9,7 +9,7 @@ from tokens import Token
 
 
 class ParseError(LoxError):
-    def __init__(self, token, message):
+    def __init__(self, token: Token, message: str):
         super().__init__(message)
         self.message = message
         self.token = token
@@ -83,7 +83,7 @@ class Parser:
     def expect(self, token: Token.Type, message: str):
         if self.peek().type == token:
             self.advance()
-            return
+            return self.previous()
 
         raise ParseError(self.peek(), message)
 
@@ -190,7 +190,32 @@ class Parser:
 
             return Expr.Unary(op, rhs)
 
-        return self.primary()
+        return self.call()
+
+    def call(self) -> Expr.Expression:
+        expr = self.primary()
+
+        while True:
+            if self.match(Token.Type.LEFT_PAREN):
+                return self.read_call(expr)
+            else:
+                break
+        return expr
+
+    def read_call(self, callee: Expr.Expression) -> Expr.Call:
+        args = []
+        if not self.peek().type == Token.Type.RIGHT_PAREN:
+            while True:
+                if len(args) > 254:
+                    self.logger.error(
+                        ParseError(self.peek(), "Can't have more than 255 arguments")
+                    )
+                args.append(self.expression())
+                if not self.match(Token.Type.COMMA):
+                    break
+        paren = self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after arguments")
+
+        return Expr.Call(callee, paren, args)
 
     def primary(self) -> Expr.Expression:
         if self.match(Token.Type.FALSE):
@@ -218,6 +243,8 @@ class Parser:
     # Parse Statements
     def declaration(self) -> Stmt.Statement | None:
         try:
+            if self.match(Token.Type.FUN):
+                return self.function("function")
             if self.match(Token.Type.VAR):
                 return self.var_decl()
             return self.statement()
@@ -241,13 +268,34 @@ class Parser:
             return self.while_stmt()
 
         if self.match(Token.Type.LEFT_BRACE):
-            return self.block_stmt()
+            return Stmt.Block(self.block())
 
         return self.expression_stmt()
 
+    def function(self, kind: str):
+        name = self.expect(Token.Type.IDENTIFIER, f"Expect {kind} name")
+        self.expect(Token.Type.LEFT_PAREN, "Expect '(' after function name")
+
+        params = []
+        if not self.peek().type == Token.Type.RIGHT_PAREN:
+            while True:
+                if len(params) > 254:
+                    self.logger.error(
+                        ParseError(self.peek(), "Can't have more than 255 parameters")
+                    )
+                params.append(
+                    self.expect(Token.Type.IDENTIFIER, "Expect parameter name")
+                )
+                if not self.match(Token.Type.COMMA):
+                    break
+        self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after arguments")
+        self.expect(Token.Type.LEFT_BRACE, f"Expect '{{' before {kind} body")
+        body = self.block()
+
+        return Stmt.Function(name, params, body)
+
     def var_decl(self) -> Stmt.Var:
-        self.expect(Token.Type.IDENTIFIER, "Expect variable name")
-        name = self.previous()
+        name = self.expect(Token.Type.IDENTIFIER, "Expect variable name")
 
         initializer = None
         if self.match(Token.Type.EQUAL):
@@ -320,14 +368,15 @@ class Parser:
 
         return Stmt.While(cond, body)
 
-    def block_stmt(self) -> Stmt.Block:
+    def block(self) -> list[Stmt.Statement]:
         stmts = []
 
         while not self.peek().type == Token.Type.RIGHT_BRACE and not self.is_at_end():
             stmts.append(self.declaration())
 
         self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after block")
-        return Stmt.Block(stmts)
+
+        return stmts
 
     def expression_stmt(self) -> Stmt.Expression:
         expr = self.expression()

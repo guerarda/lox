@@ -7,6 +7,8 @@ import expression as Expr
 import statement as Stmt
 from environment import Environment
 from errors import LoxError
+from loxcallable import LoxCallable
+from loxfunction import LoxFunction
 from tokens import Token
 
 
@@ -15,7 +17,7 @@ class InterpreterError(LoxError):
 
 
 class InterpreterTokenError(InterpreterError):
-    def __init__(self, token, message):
+    def __init__(self, token: Token, message: str):
         super().__init__(message)
         self.token = token
         self.message = message
@@ -207,6 +209,23 @@ class Interpreter:
                     return lv
                 return self.evaluate(right)
 
+            case Expr.Call(callee, paren, args):
+                cv = self.evaluate(callee)
+                argv = [self.evaluate(arg) for arg in args]
+
+                if not isinstance(cv, LoxCallable):
+                    raise InterpreterTokenError(
+                        paren, "Can only call functions and classes"
+                    )
+
+                if len(argv) != cv.arity():
+                    raise InterpreterTokenError(
+                        paren,
+                        f"Expected {cv.arity()} arguments, got {len(argv)} instead",
+                    )
+
+                return cv.call(self, argv)
+
             case _:
                 raise InterpreterExpressionError(
                     expression, "Could not evaluate Expression"
@@ -221,6 +240,10 @@ class Interpreter:
             case Stmt.Expression(expr):
                 self.evaluate(expr)
 
+            case Stmt.Function():
+                function = LoxFunction(statement)
+                self.environment.define(statement.name.lexeme, function)
+
             case Stmt.Var(name, initializer):
                 value = None
                 if initializer is not None:
@@ -229,12 +252,7 @@ class Interpreter:
                 self.environment.define(name.lexeme, value)
 
             case Stmt.Block(stmts):
-                previous = self.environment
-
-                self.environment = Environment(previous)
-                self.execute_statements(stmts)
-
-                self.environment = previous
+                self.execute_block(stmts, Environment(self.environment))
 
             case Stmt.If(cond, conseq, alt):
                 if self.is_truthy(self.evaluate(cond)):
@@ -250,6 +268,14 @@ class Interpreter:
                 raise InterpreterStatementError(
                     statement, "Could not execute Statement"
                 )
+
+    def execute_block(self, statements: list[Stmt.Statement], environment: Environment):
+        previous = self.environment
+        try:
+            self.environment = environment
+            self.execute_statements(statements)
+        finally:
+            self.environment = previous
 
     def execute_statements(self, statements: list[Stmt.Statement]):
         for stmt in statements:

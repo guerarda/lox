@@ -41,3 +41,9 @@ class If(Statement):
 class While(Statement):
     condition: Expr.Expression
     body: Statement
+
+@dataclass
+class Function(Statement):
+    name: Token
+    params: list[Token]
+    body: list[Statement]

@@ -7,7 +7,7 @@ import expression as Expr
 import statement as Stmt
 from environment import Environment
 from errors import LoxError
-from loxcallable import LoxCallable
+from loxcallable import LoxCallable, Return
 from loxfunction import LoxFunction
 from tokens import Token
 
@@ -223,7 +223,6 @@ class Interpreter:
                         paren,
                         f"Expected {cv.arity()} arguments, got {len(argv)} instead",
                     )
-
                 return cv.call(self, argv)
 
             case _:
@@ -241,7 +240,7 @@ class Interpreter:
                 self.evaluate(expr)
 
             case Stmt.Function():
-                function = LoxFunction(statement)
+                function = LoxFunction(statement, self.environment)
                 self.environment.define(statement.name.lexeme, function)
 
             case Stmt.Var(name, initializer):
@@ -263,6 +262,9 @@ class Interpreter:
             case Stmt.While(cond, body):
                 while self.is_truthy(self.evaluate(cond)):
                     self.execute(body)
+
+            case Stmt.Return(_, value):
+                raise Return(None if value is None else self.evaluate(value))
 
             case _:
                 raise InterpreterStatementError(

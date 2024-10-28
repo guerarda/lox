@@ -47,3 +47,8 @@ class Function(Statement):
     name: Token
     params: list[Token]
     body: list[Statement]
+
+@dataclass
+class Return(Statement):
+    keyword: Token
+    value: Expr.Expression | None

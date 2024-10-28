@@ -4,15 +4,16 @@ from typing import TYPE_CHECKING
 
 import statement as Stmt
 from environment import Environment
-from loxcallable import LoxCallable
+from loxcallable import LoxCallable, Return
 
 if TYPE_CHECKING:
     from interpreter import Interpreter
 
 
 class LoxFunction(LoxCallable):
-    def __init__(self, declaration: Stmt.Function):
+    def __init__(self, declaration: Stmt.Function, closure: Environment):
         self.declaration = declaration
+        self.closure = closure
 
     def __str__(self):
         return f"<fn {self.declaration.name.lexeme}>"
@@ -21,9 +22,12 @@ class LoxFunction(LoxCallable):
         return len(self.declaration.params)
 
     def call(self, interpreter: "Interpreter", args: list[object]):
-        env = Environment(interpreter.environment)
+        env = Environment(self.closure)
 
         for value, decl in zip(args, self.declaration.params):
             env.define(decl.lexeme, value)
 
-        interpreter.execute_block(self.declaration.body, env)
+        try:
+            interpreter.execute_block(self.declaration.body, env)
+        except Return as e:
+            return e.value

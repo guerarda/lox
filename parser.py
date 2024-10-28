@@ -270,6 +270,9 @@ class Parser:
         if self.match(Token.Type.LEFT_BRACE):
             return Stmt.Block(self.block())
 
+        if self.match(Token.Type.RETURN):
+            return self.return_stmt()
+
         return self.expression_stmt()
 
     def function(self, kind: str):
@@ -382,3 +385,14 @@ class Parser:
         expr = self.expression()
         self.expect(Token.Type.SEMICOLON, "Expect ';' after expression")
         return Stmt.Expression(expr)
+
+    def return_stmt(self) -> Stmt.Return:
+        token = self.previous()
+        value = None
+
+        if self.peek().type != Token.Type.SEMICOLON:
+            value = self.expression()
+
+        self.expect(Token.Type.SEMICOLON, "Expect ';' after return value")
+
+        return Stmt.Return(token, value)

@@ -50,6 +50,8 @@ class InterpreterStatementError(InterpreterError):
 class Interpreter:
     def __init__(self, environment: Environment | None = None):
         self.environment = environment if environment is not None else Environment()
+        self.globals = Environment()
+        self.locals = {}
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
@@ -61,7 +63,7 @@ class Interpreter:
             raise e
 
     # Private functions
-    def is_truthy(self, obj) -> bool:
+    def is_truthy(self, obj: object) -> bool:
         match obj:
             case None:
                 return False
@@ -75,11 +77,11 @@ class Interpreter:
     def is_equal(self, left, right) -> bool:
         return left == right
 
-    def check_number_operand(self, operator: Token, operand):
+    def check_number_operand(self, operator: Token, operand: object):
         if not isinstance(operand, float):
             raise InterpreterTokenError(operator, "Operand must be a number")
 
-    def stringify(self, value):
+    def stringify(self, value: object):
         match value:
             case True:
                 return "true"
@@ -91,6 +93,13 @@ class Interpreter:
 
             case _:
                 return value
+
+    def lookup_var(self, name: Token, expression: Expr.Expression):
+        dist = self.locals[expression]
+        if dist is not None:
+            return self.environment.get_at(name, dist)
+
+        return self.globals
 
     # Interpreting Expressions
     def evaluate(self, expression: Expr.Expression):
@@ -192,10 +201,18 @@ class Interpreter:
                 return self.evaluate(expr)
 
             case Expr.Variable(name):
-                return self.environment.get(name)
+                return self.lookup_var(name, expression)
 
             case Expr.Assignment(name, value):
-                self.environment.assign(name, self.evaluate(value))
+                val = self.evaluate(value)
+                dist = self.locals.get(expression)
+
+                if dist is not None:
+                    self.environment.assign_at(dist, name, val)
+                else:
+                    self.globals.assign(name, val)
+
+                self.environment.assign(name, val)
 
             case Expr.Logical(Token.Type.OR, left, right):
                 lv = self.evaluate(left)
@@ -282,6 +299,9 @@ class Interpreter:
     def execute_statements(self, statements: list[Stmt.Statement]):
         for stmt in statements:
             self.execute(stmt)
+
+    def resolve(self, expression: Expr.Expression, depth: int):
+        self.locals[expression] = depth
 
 
 class REPLInterpreter(Interpreter):

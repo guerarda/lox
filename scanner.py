@@ -184,20 +184,20 @@ class Scanner:
         else:
             self.add_token(self.keywords[str])
 
-    def add_token(self, type, literal=None):
+    def add_token(self, type: Token.Type, literal=None):
         lexeme = self.source[self.start : self.current]
         self.tokens.append(Token(type, lexeme, literal, self.line))
 
-    def is_at_end(self):
+    def is_at_end(self) -> bool:
         return self.current >= len(self.source)
 
-    def advance(self):
+    def advance(self) -> str:
         c = self.source[self.current]
         self.current += 1
 
         return c
 
-    def advance_if(self, expected):
+    def advance_if(self, expected: str):
         if self.is_at_end():
             return False
 

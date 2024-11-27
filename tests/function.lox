@@ -1,0 +1,7 @@
+fun hi(first, last) {
+    print(first);
+    print(last);
+}
+
+hi("john", "doe");
+

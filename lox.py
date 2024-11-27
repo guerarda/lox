@@ -7,7 +7,6 @@ from environment import Environment
 from errors import LoxError, LoxRuntimeError
 from interpreter import Interpreter, REPLInterpreter
 from parser import Parser
-from resolver import Resolver
 from scanner import Scanner
 
 global_environment = Environment()
@@ -79,19 +78,6 @@ def run(source: str, is_repl: bool = False):
         raise e
 
     assert stmts is not None  # Would have raised an exception
-
-    interpreter = (
-        REPLInterpreter(global_environment)
-        if is_repl
-        else Interpreter(global_environment)
-    )
-
-    resolver = Resolver(interpreter)
-    resolver.resolve(stmts)
-
-    if resolver.has_error:
-        has_error = True
-        return
 
     if is_repl:
         REPLInterpreter(global_environment).interpret(stmts)

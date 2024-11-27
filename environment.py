@@ -1,6 +1,5 @@
 # environment
 
-
 import logging
 
 from errors import LoxError
@@ -13,19 +12,59 @@ class Environment:
         self.enclosing = enclosing
         self.logger = logging.getLogger("Lox.Environment")
 
-    def ancestor(self, distance: int):
-        env: Environment = self
+    def __contains__(self, item: str):
+        if item in self.values:
+            return True
 
-        while distance > 0:
-            assert env.enclosing is not None
-            env = env.enclosing
-            distance -= 1
+        if self.enclosing is not None:
+            return item in self.enclosing
+
+        return False
+
+    def copy(self) -> "Environment":
+        env = Environment()
+        env.values = self.values.copy()
+        env.enclosing = self.enclosing
         return env
 
-    def define(self, name: str, value: object):
-        self.values[name] = value
+    def define(self, name: Token, value: object) -> "Environment":
+        if name.lexeme in self.values:
+            self.logger.error(
+                f"Line {name.line}, Already a variable with the name '{name.lexeme}' in scope."
+            )
 
-    def get(self, name: Token):
+        env = self.copy()
+        env.values[name.lexeme] = value
+        return env
+
+    def define_multiple(
+        self, names: list[Token], values: list[object]
+    ) -> "Environment":
+        env = self.copy()
+
+        for name, value in zip(names, values):
+            if name.lexeme in self.values:
+                self.logger.error(
+                    f"Line {name.line}, Already a variable with the name '{name.lexeme}' in scope."
+                )
+
+            env.values[name.lexeme] = value
+        return env
+
+    def assign(self, name: Token, value: object):
+        if name.lexeme in self.values:
+            env = self.copy()
+            env.values[name.lexeme] = value
+            return env
+
+        if self.enclosing is not None:
+            env = self.copy()
+            env.enclosing = self.enclosing.assign(name, value)
+            return env
+
+        raise LoxError(f"Undefined variable '{name.lexeme}'")
+
+    def get(self, name: Token) -> object:
         if name.lexeme in self.values:
             return self.values[name.lexeme]
 
@@ -33,19 +72,3 @@ class Environment:
             return self.enclosing.get(name)
 
         raise LoxError(f"Undefined variable '{name.lexeme}'")
-
-    def get_at(self, name: Token, distance: int):
-        return self.ancestor(distance).values.get(name.lexeme)
-
-    def assign(self, name: Token, value: object):
-        if name.lexeme in self.values:
-            self.values[name.lexeme] = value
-            return
-
-        if self.enclosing is not None:
-            return self.enclosing.assign(name, value)
-
-        raise LoxError(f"Undefined variable '{name.lexeme}'")
-
-    def assign_at(self, distance: int, name: Token, value: object):
-        self.ancestor(distance).values[name.lexeme] = value

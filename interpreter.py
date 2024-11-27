@@ -94,13 +94,6 @@ class Interpreter:
             case _:
                 return value
 
-    def lookup_var(self, name: Token, expression: Expr.Expression):
-        dist = self.locals[expression]
-        if dist is not None:
-            return self.environment.get_at(name, dist)
-
-        return self.globals
-
     # Interpreting Expressions
     def evaluate(self, expression: Expr.Expression):
         match expression:
@@ -201,18 +194,15 @@ class Interpreter:
                 return self.evaluate(expr)
 
             case Expr.Variable(name):
-                return self.lookup_var(name, expression)
+                return self.environment.get(name)
 
             case Expr.Assignment(name, value):
                 val = self.evaluate(value)
-                dist = self.locals.get(expression)
 
-                if dist is not None:
-                    self.environment.assign_at(dist, name, val)
+                if name.lexeme in self.environment:
+                    self.environment = self.environment.assign(name, val)
                 else:
-                    self.globals.assign(name, val)
-
-                self.environment.assign(name, val)
+                    self.globals = self.globals.assign(name, val)
 
             case Expr.Logical(Token.Type.OR, left, right):
                 lv = self.evaluate(left)
@@ -258,14 +248,14 @@ class Interpreter:
 
             case Stmt.Function():
                 function = LoxFunction(statement, self.environment)
-                self.environment.define(statement.name.lexeme, function)
+                self.environment = self.environment.define(statement.name, function)
 
             case Stmt.Var(name, initializer):
                 value = None
                 if initializer is not None:
                     value = self.evaluate(initializer)
 
-                self.environment.define(name.lexeme, value)
+                self.environment = self.environment.define(name, value)
 
             case Stmt.Block(stmts):
                 self.execute_block(stmts, Environment(self.environment))

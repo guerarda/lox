@@ -22,10 +22,7 @@ class LoxFunction(LoxCallable):
         return len(self.declaration.params)
 
     def call(self, interpreter: "Interpreter", args: list[object]):
-        env = Environment(self.closure)
-
-        for value, decl in zip(args, self.declaration.params):
-            env.define(decl.lexeme, value)
+        env = Environment(self.closure).define_multiple(self.declaration.params, args)
 
         try:
             interpreter.execute_block(self.declaration.body, env)

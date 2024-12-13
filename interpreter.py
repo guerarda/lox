@@ -75,7 +75,18 @@ class Interpreter:
                 return True
 
     def is_equal(self, left, right) -> bool:
-        return left == right
+        match [left, right]:
+            case [bool(), bool()]:
+                return left == right
+
+            case [bool(), _]:
+                return False
+
+            case [_, bool()]:
+                return False
+
+            case _:
+                return left == right
 
     def check_number_operand(self, operator: Token, operand: object):
         if not isinstance(operand, float):
@@ -121,9 +132,12 @@ class Interpreter:
 
             case Expr.Binary(Token(Token.Type.PLUS), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
+
+                if isinstance(lv, str) and isinstance(rv, str):
+                    return str(lv) + str(rv)
+
+                self.check_number_operand(expression.operator, lv)
                 self.check_number_operand(expression.operator, rv)
 
                 return float(lv) + float(rv)
@@ -205,6 +219,8 @@ class Interpreter:
                     self.environment = self.environment.assign(name, val)
                 else:
                     self.globals = self.globals.assign(name, val)
+
+                return val
 
             case Expr.Logical(Token.Type.OR, left, right):
                 lv = self.evaluate(left)

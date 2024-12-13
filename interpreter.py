@@ -91,6 +91,8 @@ class Interpreter:
             case None:
                 return "nil"
 
+            case float():
+                return f"{value:g}"
             case _:
                 return value
 
@@ -185,10 +187,10 @@ class Interpreter:
                 return float(lv) <= float(rv)
 
             case Expr.Binary(Token(Token.Type.EQUAL_EQUAL), left, right):
-                return self.is_equal(left, right)
+                return self.is_equal(self.evaluate(left), self.evaluate(right))
 
             case Expr.Binary(Token(Token.Type.BANG_EQUAL), left, right):
-                return not self.is_equal(left, right)
+                return not self.is_equal(self.evaluate(left), self.evaluate(right))
 
             case Expr.Grouping(expr):
                 return self.evaluate(expr)

@@ -349,7 +349,7 @@ class Parser:
             (
                 self.statement()
                 if inc is None
-                else Stmt.Block([Stmt.Expression(inc), self.statement()])
+                else Stmt.Block([self.statement(), Stmt.Expression(inc)])
             ),
         )
 

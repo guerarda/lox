@@ -58,11 +58,18 @@ class Environment:
             return env
 
         if self.enclosing is not None:
-            env = self.copy()
-            env.enclosing = self.enclosing.assign(name, value)
-            return env
+            self.overwrite(name, value)
+            return self
 
         raise LoxError(f"Undefined variable '{name.lexeme}'")
+
+    def overwrite(self, name: Token, value: object):
+        if name.lexeme in self.values:
+            self.values[name.lexeme] = value
+            return self
+
+        if self.enclosing is not None:
+            return self.enclosing.overwrite(name, value)
 
     def get(self, name: Token) -> object:
         if name.lexeme in self.values:

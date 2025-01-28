@@ -243,8 +243,10 @@ class Parser:
     # Parse Statements
     def declaration(self) -> Stmt.Statement | None:
         try:
+            if self.match(Token.Type.CLASS):
+                return self.class_decl()
             if self.match(Token.Type.FUN):
-                return self.function("function")
+                return self.fun_decl("function")
             if self.match(Token.Type.VAR):
                 return self.var_decl()
             return self.statement()
@@ -275,7 +277,19 @@ class Parser:
 
         return self.expression_stmt()
 
-    def function(self, kind: str):
+    def class_decl(self):
+        name = self.expect(Token.Type.IDENTIFIER, "Expect class name")
+        self.expect(Token.Type.LEFT_BRACE, "Expect '{' before class body")
+
+        methods = []
+        while not self.peek().type == Token.Type.RIGHT_BRACE and not self.is_at_end():
+            methods.append(self.fun_decl("method"))
+
+        self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after class body")
+
+        return Stmt.Class(name, methods)
+
+    def fun_decl(self, kind: str):
         name = self.expect(Token.Type.IDENTIFIER, f"Expect {kind} name")
         self.expect(Token.Type.LEFT_PAREN, "Expect '(' after function name")
 

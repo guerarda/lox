@@ -8,6 +8,7 @@ import statement as Stmt
 from environment import Environment
 from errors import LoxError
 from loxcallable import LoxCallable, Return
+from loxclass import LoxClass
 from loxfunction import LoxFunction
 from tokens import Token
 
@@ -267,6 +268,10 @@ class Interpreter:
             case Stmt.Function():
                 function = LoxFunction(statement, self.environment)
                 self.environment = self.environment.define(statement.name, function)
+
+            case Stmt.Class():
+                klass = LoxClass(statement.name)
+                self.environment = self.environment.define(statement.name, klass)
 
             case Stmt.Var(name, initializer):
                 value = None

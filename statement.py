@@ -31,16 +31,19 @@ class Var(Statement):
 class Block(Statement):
     statements: list[Statement]
 
+
 @dataclass
 class If(Statement):
     condition: Expr.Expression
     consequence: Statement
     alternative: Statement | None
 
+
 @dataclass
 class While(Statement):
     condition: Expr.Expression
     body: Statement
+
 
 @dataclass
 class Function(Statement):
@@ -48,7 +51,14 @@ class Function(Statement):
     params: list[Token]
     body: list[Statement]
 
+
 @dataclass
 class Return(Statement):
     keyword: Token
     value: Expr.Expression | None
+
+
+@dataclass
+class Class(Statement):
+    name: Token
+    methods: list[Function]

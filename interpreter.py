@@ -260,6 +260,16 @@ class Interpreter:
 
                 raise LoxRuntimeError(name, "Only instances have properties")
 
+            case Expr.Set(target, name, value):
+                obj = self.evaluate(target)
+
+                if isinstance(obj, LoxInstance):
+                    v = self.evaluate(value)
+                    obj.set(name, v)
+                    return v
+
+                raise LoxRuntimeError(name, "Only instances have fields.")
+
             case _:
                 raise InterpreterExpressionError(
                     expression, "Could not evaluate Expression"

@@ -112,6 +112,9 @@ class Parser:
             if isinstance(expr, Expr.Variable):
                 return Expr.Assignment(expr.name, value)
 
+            elif isinstance(expr, Expr.Get):
+                return Expr.Set(expr.target, expr.name, value)
+
             raise ParseError(equal, "Invalid assigment target")
 
         return expr

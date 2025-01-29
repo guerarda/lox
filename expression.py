@@ -62,3 +62,10 @@ class Call(Expression):
 class Get(Expression):
     target: Expression
     name: Token
+
+
+@dataclass
+class Set(Expression):
+    target: Expression
+    name: Token
+    value: Expression

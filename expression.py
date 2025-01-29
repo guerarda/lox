@@ -56,3 +56,9 @@ class Call(Expression):
     callee: Expression
     paren: Token
     args: list[Expression]
+
+
+@dataclass
+class Get(Expression):
+    target: Expression
+    name: Token

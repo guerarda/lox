@@ -1,5 +1,7 @@
 # errors
 
+from tokens import Token
+
 
 class LoxError(Exception):
     def __init__(self, message):
@@ -8,4 +10,10 @@ class LoxError(Exception):
 
 
 class LoxRuntimeError(LoxError):
-    pass
+    def __init__(self, token: Token, message: str):
+        super().__init__(message)
+        self.token = token
+        self.message = message
+
+    def __str__(self):
+        return f"line {self.token.line + 1}, {self.message}"

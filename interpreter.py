@@ -4,9 +4,10 @@ import logging
 from formatter import Formatter
 
 import expression as Expr
+from loxinstance import LoxInstance
 import statement as Stmt
 from environment import Environment
-from errors import LoxError
+from errors import LoxError, LoxRuntimeError
 from loxcallable import LoxCallable, Return
 from loxclass import LoxClass
 from loxfunction import LoxFunction
@@ -250,6 +251,14 @@ class Interpreter:
                         f"Expected {cv.arity()} arguments, got {len(argv)} instead",
                     )
                 return cv.call(self, argv)
+
+            case Expr.Get(target, name):
+                obj = self.evaluate(target)
+
+                if isinstance(obj, LoxInstance):
+                    return obj.get(name)
+
+                raise LoxRuntimeError(name, "Only instances have properties")
 
             case _:
                 raise InterpreterExpressionError(

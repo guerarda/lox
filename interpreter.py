@@ -291,7 +291,13 @@ class Interpreter:
                 )
 
             case Stmt.Class():
-                klass = LoxClass(statement.name)
+
+                methods: dict[str, LoxFunction] = {}
+
+                for method in statement.methods:
+                    methods[method.name.lexeme] = LoxFunction(method, self.environment)
+
+                klass = LoxClass(statement.name, methods)
                 self.environment = Environment(self.environment).define(
                     statement.name, klass
                 )

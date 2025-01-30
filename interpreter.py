@@ -218,9 +218,9 @@ class Interpreter:
                 val = self.evaluate(value)
 
                 if name.lexeme in self.environment:
-                    self.environment = self.environment.assign(name, val)
+                    self.environment = Environment(self.environment).assign(name, val)
                 else:
-                    self.globals = self.globals.assign(name, val)
+                    self.globals = Environment(self.globals).assign(name, val)
 
                 return val
 
@@ -286,11 +286,15 @@ class Interpreter:
 
             case Stmt.Function():
                 function = LoxFunction(statement, self.environment)
-                self.environment = self.environment.define(statement.name, function)
+                self.environment = Environment(self.environment).define(
+                    statement.name, function
+                )
 
             case Stmt.Class():
                 klass = LoxClass(statement.name)
-                self.environment = self.environment.define(statement.name, klass)
+                self.environment = Environment(self.environment).define(
+                    statement.name, klass
+                )
 
             case Stmt.Var(name, initializer):
                 value = None

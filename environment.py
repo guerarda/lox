@@ -21,26 +21,18 @@ class Environment:
 
         return False
 
-    def copy(self) -> "Environment":
-        env = Environment()
-        env.values = self.values.copy()
-        env.enclosing = self.enclosing
-        return env
-
     def define(self, name: Token, value: object) -> "Environment":
         if name.lexeme in self.values:
             self.logger.error(
                 f"Line {name.line}, Already a variable with the name '{name.lexeme}' in scope."
             )
 
-        env = self.copy()
-        env.values[name.lexeme] = value
-        return env
+        self.values[name.lexeme] = value
+        return self
 
     def define_multiple(
         self, names: list[Token], values: list[object]
     ) -> "Environment":
-        env = self.copy()
 
         for name, value in zip(names, values):
             if name.lexeme in self.values:
@@ -48,28 +40,19 @@ class Environment:
                     f"Line {name.line}, Already a variable with the name '{name.lexeme}' in scope."
                 )
 
-            env.values[name.lexeme] = value
-        return env
+            self.values[name.lexeme] = value
+        return self
 
     def assign(self, name: Token, value: object):
-        if name.lexeme in self.values:
-            env = self.copy()
-            env.values[name.lexeme] = value
-            return env
-
-        if self.enclosing is not None:
-            self.overwrite(name, value)
-            return self
-
-        raise LoxError(f"Undefined variable '{name.lexeme}'")
-
-    def overwrite(self, name: Token, value: object):
         if name.lexeme in self.values:
             self.values[name.lexeme] = value
             return self
 
         if self.enclosing is not None:
-            return self.enclosing.overwrite(name, value)
+            self.enclosing.assign(name, value)
+            return self
+
+        raise LoxError(f"Undefined variable '{name.lexeme}'")
 
     def get(self, name: Token) -> object:
         if name.lexeme in self.values:

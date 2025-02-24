@@ -14,7 +14,7 @@ class ScannerError(LoxError):
         self.char = char
 
     def __str__(self):
-        return f"line {self.line + 1}, at '{self.char}'. {self.message}"
+        return f"{self.line + 1} |  Error at '{self.char}', {self.message}."
 
 
 class Scanner:

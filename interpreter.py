@@ -25,7 +25,7 @@ class InterpreterTokenError(InterpreterError):
         self.message = message
 
     def __str__(self):
-        return f"line {self.token.line + 1}, {self.message}"
+        return f"{self.token.line + 1} | {self.message}."
 
 
 class InterpreterExpressionError(InterpreterError):

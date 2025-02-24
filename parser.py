@@ -16,8 +16,10 @@ class ParseError(LoxError):
 
     def __str__(self):
         if self.token.type == Token.Type.EOF:
-            return f"line {self.token.line + 1}, at EOL. {self.message}"
-        return f"line {self.token.line + 1}, at '{self.token.lexeme}'. {self.message}"
+            return f"Error at EOL. {self.message}"
+        return (
+            f"{self.token.line + 1} | Error at '{self.token.lexeme}': {self.message}."
+        )
 
 
 class Parser:

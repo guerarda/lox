@@ -117,7 +117,7 @@ class Parser:
             elif isinstance(expr, Expr.Get):
                 return Expr.Set(expr.target, expr.name, value)
 
-            raise ParseError(equal, "Invalid assigment target")
+            raise ParseError(equal, "Invalid assignment target")
 
         return expr
 

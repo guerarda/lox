@@ -291,7 +291,6 @@ class Interpreter:
                 )
 
             case Stmt.Class():
-
                 methods: dict[str, LoxFunction] = {}
 
                 for method in statement.methods:

@@ -17,7 +17,7 @@ has_runtime_error = False
 def main(argv):
     logging.basicConfig(format="%(name)s %(levelname)s: %(message)s")
     if len(argv) > 2:
-        raise SystemExit("Usage lox.py filename")
+        sys.exit("Usage lox.py filename")
 
     if len(argv) == 2:
         run_file(argv[1])
@@ -27,14 +27,19 @@ def main(argv):
 
 
 def run_file(path):
+    global has_error
+    has_error = False
+
+    global has_runtime_error
+    has_runtime_error = False
+
     with open(path) as file:
         run_catch_errors(file.read())
-
         if has_error:
-            exit(65)
+            sys.exit(65)
 
         if has_runtime_error:
-            exit(70)
+            sys.exit(70)
 
 
 def run_prompt():
@@ -50,39 +55,36 @@ def run_prompt():
 
 
 def run_catch_errors(source: str, is_repl: bool = False):
+    global has_error
+    global has_runtime_error
+
     try:
         run(source, is_repl)
 
+    except LoxRuntimeError:
+        has_runtime_error = True
+
     except LoxError:
-        return
+        has_error = True
 
 
 def run(source: str, is_repl: bool = False):
-    global has_error
-    global has_runtime_error
-    try:
-        scanner = Scanner(source)
-        parser = Parser(scanner.scan_tokens())
-        stmts = parser.parse()
 
-        if parser.has_error:
-            has_error = True
-            return
+    scanner = Scanner(source)
+    parser = Parser(scanner.scan_tokens())
+    stmts = parser.parse()
 
-    except LoxRuntimeError as e:
-        has_runtime_error = True
-        raise e
-
-    except LoxError as e:
+    if parser.has_error:
+        global has_error
         has_error = True
-        raise e
+        return
 
     assert stmts is not None  # Would have raised an exception
 
     if is_repl:
         REPLInterpreter(global_environment).interpret(stmts)
     else:
-        Interpreter(global_environment).interpret(stmts)
+        Interpreter(Environment()).interpret(stmts)
 
 
 if __name__ == "__main__":

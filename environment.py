@@ -22,9 +22,11 @@ class Environment:
         return False
 
     def define(self, name: Token, value: object) -> "Environment":
-        if name.lexeme in self.values:
-            self.logger.error(
-                f"Line {name.line}, Already a variable with the name '{name.lexeme}' in scope."
+        # For the global environment, we allow redefining variable, to
+        # make it a better experience for the REPL
+        if self.enclosing and name.lexeme in self.values:
+            raise LoxError(
+                f"{name.line + 1} | Error at '{name.lexeme}': Already a variable with this name in this scope."
             )
 
         self.values[name.lexeme] = value
@@ -33,11 +35,10 @@ class Environment:
     def define_multiple(
         self, names: list[Token], values: list[object]
     ) -> "Environment":
-
         for name, value in zip(names, values):
-            if name.lexeme in self.values:
-                self.logger.error(
-                    f"Line {name.line}, Already a variable with the name '{name.lexeme}' in scope."
+            if self.enclosing and name.lexeme in self.values:
+                raise LoxError(
+                    f"{name.line + 1} | Error at '{name.lexeme}': Already a variable with this name in this scope."
                 )
 
             self.values[name.lexeme] = value

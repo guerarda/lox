@@ -53,7 +53,6 @@ class Interpreter:
     def __init__(self, environment: Environment | None = None):
         self.environment = environment if environment is not None else Environment()
         self.globals = Environment()
-        self.locals = {}
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
@@ -340,9 +339,6 @@ class Interpreter:
     def execute_statements(self, statements: list[Stmt.Statement]):
         for stmt in statements:
             self.execute(stmt)
-
-    def resolve(self, expression: Expr.Expression, depth: int):
-        self.locals[expression] = depth
 
 
 class REPLInterpreter(Interpreter):

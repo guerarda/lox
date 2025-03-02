@@ -3,6 +3,7 @@
 import logging
 import sys
 
+from analyzer import Analyzer
 from environment import Environment
 from errors import LoxError, LoxRuntimeError
 from interpreter import Interpreter, REPLInterpreter
@@ -73,6 +74,7 @@ def run(source: str, is_repl: bool = False):
     scanner = Scanner(source)
     parser = Parser(scanner.scan_tokens())
     stmts = parser.parse()
+    Analyzer().analyze(stmts)
 
     if parser.has_error:
         global has_error

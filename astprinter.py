@@ -23,4 +23,4 @@ class ASTPrinter:
                 return self.wrap(expr.operator.lexeme, [expr.right])
 
             case _:
-                raise Exception
+                raise NotImplementedError

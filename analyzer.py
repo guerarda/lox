@@ -1,10 +1,16 @@
 # analyzer
 
+from enum import Enum, auto
 from errors import LoxError
 import statement as Stmt
 from tokens import Token
 import expression as Expr
 import logging
+
+
+class FunctionType(Enum):
+    NONE = (auto(),)
+    FUNCTION = auto()
 
 
 class AnalyzerError(LoxError):
@@ -22,6 +28,7 @@ class AnalyzerError(LoxError):
 class Analyzer:
     def __init__(self):
         self.scopes: list[dict[str, bool]] = []
+        self.functions: list[FunctionType] = [FunctionType.NONE]
         self.logger = logging.getLogger("Lox.Analyzer")
 
     def analyze(self, statements: list[Stmt.Statement]):
@@ -52,6 +59,8 @@ class Analyzer:
                 self.declare(name)
                 self.define(name)
 
+                self.functions.append(FunctionType.FUNCTION)
+
                 self.begin_scope()
                 for param in params:
                     self.declare(param)
@@ -59,6 +68,8 @@ class Analyzer:
 
                     self.analyze_list(body)
                 self.end_scope()
+
+                self.functions.pop()
 
             case Stmt.Expression(expr):
                 self.analyze_one(expr)
@@ -72,7 +83,10 @@ class Analyzer:
             case Stmt.Print(expr):
                 self.analyze_one(expr)
 
-            case Stmt.Return(_, value):
+            case Stmt.Return(keyword, value):
+                if self.functions[-1] == FunctionType.NONE:
+                    raise AnalyzerError(keyword, "Can't return from top-level code")
+
                 if value:
                     self.analyze_one(value)
 

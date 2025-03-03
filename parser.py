@@ -219,9 +219,8 @@ class Parser:
         if not self.peek().type == Token.Type.RIGHT_PAREN:
             while True:
                 if len(args) > 254:
-                    self.logger.error(
-                        ParseError(self.peek(), "Can't have more than 255 arguments")
-                    )
+                    raise ParseError(self.peek(), "Can't have more than 255 arguments")
+
                 args.append(self.expression())
                 if not self.match(Token.Type.COMMA):
                     break
@@ -312,9 +311,7 @@ class Parser:
         if not self.peek().type == Token.Type.RIGHT_PAREN:
             while True:
                 if len(params) > 254:
-                    self.logger.error(
-                        ParseError(self.peek(), "Can't have more than 255 parameters")
-                    )
+                    raise ParseError(self.peek(), "Can't have more than 255 parameters")
                 params.append(
                     self.expect(Token.Type.IDENTIFIER, "Expect parameter name")
                 )

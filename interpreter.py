@@ -211,7 +211,7 @@ class Interpreter:
                 return self.evaluate(expr)
 
             case Expr.Variable(name):
-                return self.environment.get(name)
+                return self.environment.get(name.lexeme)
 
             case Expr.Assignment(name, value):
                 val = self.evaluate(value)
@@ -268,7 +268,7 @@ class Interpreter:
                 raise LoxRuntimeError(name, "Only instances have fields.")
 
             case Expr.This(keyword):
-                return self.environment.get(keyword)
+                return self.environment.get(keyword.lexeme)
 
             case _:
                 raise InterpreterExpressionError(
@@ -294,7 +294,9 @@ class Interpreter:
                 methods: dict[str, LoxFunction] = {}
 
                 for method in statement.methods:
-                    methods[method.name.lexeme] = LoxFunction(method, self.environment)
+                    methods[method.name.lexeme] = LoxFunction(
+                        method, self.environment, method.name.lexeme == "init"
+                    )
 
                 klass = LoxClass(statement.name, methods)
                 self.environment.define(statement.name.lexeme, klass)

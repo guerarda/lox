@@ -12,9 +12,15 @@ if TYPE_CHECKING:
 
 
 class LoxFunction(LoxCallable):
-    def __init__(self, declaration: Stmt.Function, closure: Environment):
+    def __init__(
+        self,
+        declaration: Stmt.Function,
+        closure: Environment,
+        is_initializer: bool = False,
+    ):
         self.declaration = declaration
         self.closure = closure
+        self.is_initializer = is_initializer
 
     def __str__(self):
         return f"<fn {self.declaration.name.lexeme}>"
@@ -28,10 +34,15 @@ class LoxFunction(LoxCallable):
         try:
             interpreter.execute_block(self.declaration.body, env)
         except Return as e:
+            if self.is_initializer:
+                return env.get("this")
             return e.value
+
+        if self.is_initializer:
+            return env.get("this")
 
     def bind(self, instance: LoxInstance) -> "LoxFunction":
         env = Environment(self.closure)
         env.define("this", instance)
 
-        return LoxFunction(self.declaration, env)
+        return LoxFunction(self.declaration, env, self.is_initializer)

@@ -43,11 +43,11 @@ class Environment:
 
         raise LoxError(f"Undefined variable '{name.lexeme}'")
 
-    def get(self, name: Token) -> object:
-        if name.lexeme in self.values:
-            return self.values[name.lexeme]
+    def get(self, name: str) -> object:
+        if name in self.values:
+            return self.values[name]
 
         if self.enclosing is not None:
             return self.enclosing.get(name)
 
-        raise LoxError(f"Undefined variable '{name.lexeme}'")
+        raise LoxError(f"Undefined variable '{name}'")

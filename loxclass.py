@@ -15,7 +15,13 @@ class LoxClass(LoxCallable):
         return f"{self.name.lexeme}"
 
     def arity(self):
+        if "init" in self.methods and (init := self.methods["init"]):
+            return init.arity()
         return 0
 
     def call(self, interpreter, args):
-        return LoxInstance(self)
+        instance = LoxInstance(self)
+        if "init" in self.methods and (init := self.methods["init"]):
+            init.bind(instance).call(interpreter, args)
+
+        return instance

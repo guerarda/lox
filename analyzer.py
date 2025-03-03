@@ -11,7 +11,8 @@ import logging
 class FunctionType(Enum):
     NONE = (auto(),)
     FUNCTION = (auto(),)
-    METHOD = auto()
+    METHOD = (auto(),)
+    INITIALIZER = auto()
 
 
 class ClassType(Enum):
@@ -77,7 +78,12 @@ class Analyzer:
 
                 self.scopes[-1]["this"] = True
                 for m in methods:
-                    self.analyze_function(m, FunctionType.METHOD)
+                    fntype = (
+                        FunctionType.INITIALIZER
+                        if m.name.lexeme == "init"
+                        else FunctionType.METHOD
+                    )
+                    self.analyze_function(m, fntype)
 
                 self.end_scope()
                 self.classes.pop()
@@ -99,6 +105,11 @@ class Analyzer:
                     raise AnalyzerError(keyword, "Can't return from top-level code")
 
                 if value:
+                    if self.functions[-1] == FunctionType.INITIALIZER:
+                        raise AnalyzerError(
+                            keyword, "Can't return a value from an initializer"
+                        )
+
                     self.analyze_one(value)
 
             case Stmt.While(cond, body):

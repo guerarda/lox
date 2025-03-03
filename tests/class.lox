@@ -1,0 +1,10 @@
+class Foo {
+    bar() {
+        return "baz";
+    }
+}
+
+print Foo;
+
+var babar = Foo();
+print babar;

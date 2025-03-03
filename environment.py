@@ -21,6 +21,12 @@ class Environment:
 
         return False
 
+    def __str__(self):
+        res = str(self.values)
+        if self.enclosing:
+            res += " -> " + str(self.enclosing)
+        return res
+
     def define(self, name: str, value: object) -> "Environment":
         self.values[name] = value
         return self

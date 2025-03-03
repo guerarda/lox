@@ -1,6 +1,8 @@
 # interpreter
 
 import logging
+import time
+
 from formatter import Formatter
 
 import expression as Expr
@@ -14,6 +16,19 @@ from loxfunction import LoxFunction
 from tokens import Token
 
 
+# Native functions
+class Clock(LoxCallable):
+    def arity(self):
+        return 0
+
+    def call(self, interpreter, args):
+        return time.time()
+
+    def __str__(self):
+        return f"<native fn>"
+
+
+# Interpreter Errors
 class InterpreterError(LoxError):
     pass
 
@@ -52,7 +67,7 @@ class InterpreterStatementError(InterpreterError):
 class Interpreter:
     def __init__(self, environment: Environment | None = None):
         self.environment = environment if environment is not None else Environment()
-        self.globals = Environment()
+        self.globals = Environment().define("clock", Clock())
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
@@ -64,6 +79,12 @@ class Interpreter:
             raise e
 
     # Private functions
+    def lookup_var(self, name: Token):
+        if name.lexeme in self.environment:
+            return self.environment.get(name.lexeme)
+
+        return self.globals.get(name.lexeme)
+
     def is_truthy(self, obj: object) -> bool:
         match obj:
             case None:
@@ -211,7 +232,7 @@ class Interpreter:
                 return self.evaluate(expr)
 
             case Expr.Variable(name):
-                return self.environment.get(name.lexeme)
+                return self.lookup_var(name)
 
             case Expr.Assignment(name, value):
                 val = self.evaluate(value)
@@ -268,7 +289,7 @@ class Interpreter:
                 raise LoxRuntimeError(name, "Only instances have fields.")
 
             case Expr.This(keyword):
-                return self.environment.get(keyword.lexeme)
+                return self.lookup_var(keyword)
 
             case _:
                 raise InterpreterExpressionError(

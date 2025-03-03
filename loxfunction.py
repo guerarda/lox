@@ -2,10 +2,10 @@
 
 from typing import TYPE_CHECKING
 
-from loxinstance import LoxInstance
 import statement as Stmt
 from environment import Environment
 from loxcallable import LoxCallable, Return
+from loxinstance import LoxInstance
 
 if TYPE_CHECKING:
     from interpreter import Interpreter

@@ -1,19 +1,18 @@
 # interpreter
 
 import logging
-import time
 import math
-
+import time
 from formatter import Formatter
 
 import expression as Expr
-from loxinstance import LoxInstance
 import statement as Stmt
 from environment import Environment
 from errors import LoxError, LoxRuntimeError
 from loxcallable import LoxCallable, Return
 from loxclass import LoxClass
 from loxfunction import LoxFunction
+from loxinstance import LoxInstance
 from tokens import Token
 
 

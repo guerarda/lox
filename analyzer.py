@@ -1,11 +1,12 @@
 # analyzer
 
-from enum import Enum, auto
-from errors import LoxError
-import statement as Stmt
-from tokens import Token
-import expression as Expr
 import logging
+from enum import Enum, auto
+
+import expression as Expr
+import statement as Stmt
+from errors import LoxError
+from tokens import Token
 
 
 class FunctionType(Enum):

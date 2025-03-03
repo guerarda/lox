@@ -74,7 +74,6 @@ def run(source: str, is_repl: bool = False):
     scanner = Scanner(source)
     parser = Parser(scanner.scan_tokens())
     stmts = parser.parse()
-    Analyzer().analyze(stmts)
 
     if parser.has_error:
         global has_error
@@ -82,6 +81,8 @@ def run(source: str, is_repl: bool = False):
         return
 
     assert stmts is not None  # Would have raised an exception
+
+    Analyzer().analyze(stmts)
 
     if is_repl:
         REPLInterpreter(global_environment).interpret(stmts)

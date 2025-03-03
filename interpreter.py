@@ -305,11 +305,10 @@ class Interpreter:
             case Stmt.Expression(expr):
                 self.evaluate(expr)
 
-            case Stmt.Function():
-                function = LoxFunction(statement, self.environment)
-                self.environment = Environment(self.environment).define(
-                    statement.name.lexeme, function
-                )
+            case Stmt.Function(name, _, _):
+                closure = Environment(self.environment)
+                function = LoxFunction(statement, closure)
+                self.environment.define(name.lexeme, function)
 
             case Stmt.Class():
                 methods: dict[str, LoxFunction] = {}
@@ -327,7 +326,9 @@ class Interpreter:
                 if initializer is not None:
                     value = self.evaluate(initializer)
 
-                self.environment = self.environment.define(name.lexeme, value)
+                self.environment = Environment(self.environment).define(
+                    name.lexeme, value
+                )
 
             case Stmt.Block(stmts):
                 self.execute_block(stmts, Environment(self.environment))

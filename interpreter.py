@@ -2,6 +2,7 @@
 
 import logging
 import time
+import math
 
 from formatter import Formatter
 
@@ -101,10 +102,10 @@ class Interpreter:
             case [bool(), bool()]:
                 return left == right
 
-            case [bool(), _]:
+            case [bool(), _] | [_, bool()]:
                 return False
 
-            case [_, bool()]:
+            case [_, math.inf] | [math.inf, _]:
                 return False
 
             case _:
@@ -181,8 +182,12 @@ class Interpreter:
                 rv = self.evaluate(right)
                 self.check_number_operand(expression.operator, rv)
 
+                # Python throws an exception when dividing by zero.
+                # Unlike java on top of which Lox is implemented. We
+                # want the same behavior so we have to handle this
+                # case specifically.
                 if rv == 0.0:
-                    raise InterpreterTokenError(expression.operator, "Division by zero")
+                    return math.inf
 
                 return float(lv) / float(rv)
 
@@ -244,13 +249,13 @@ class Interpreter:
 
                 return val
 
-            case Expr.Logical(Token.Type.OR, left, right):
+            case Expr.Logical(Token(Token.Type.OR), left, right):
                 lv = self.evaluate(left)
                 if self.is_truthy(lv):
                     return lv
                 return self.evaluate(right)
 
-            case Expr.Logical(Token.Type.AND, left, right):
+            case Expr.Logical(Token(Token.Type.AND), left, right):
                 lv = self.evaluate(left)
                 if not self.is_truthy(lv):
                     return lv

@@ -69,3 +69,8 @@ class Set(Expression):
     target: Expression
     name: Token
     value: Expression
+
+
+@dataclass
+class This(Expression):
+    keyword: Token

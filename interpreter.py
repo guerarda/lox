@@ -256,7 +256,6 @@ class Interpreter:
 
                 if isinstance(obj, LoxInstance):
                     return obj.get(name)
-
                 raise LoxRuntimeError(name, "Only instances have properties")
 
             case Expr.Set(target, name, value):
@@ -266,8 +265,10 @@ class Interpreter:
                     v = self.evaluate(value)
                     obj.set(name, v)
                     return v
-
                 raise LoxRuntimeError(name, "Only instances have fields.")
+
+            case Expr.This(keyword):
+                return self.environment.get(keyword)
 
             case _:
                 raise InterpreterExpressionError(
@@ -286,7 +287,7 @@ class Interpreter:
             case Stmt.Function():
                 function = LoxFunction(statement, self.environment)
                 self.environment = Environment(self.environment).define(
-                    statement.name, function
+                    statement.name.lexeme, function
                 )
 
             case Stmt.Class():
@@ -305,7 +306,7 @@ class Interpreter:
                 if initializer is not None:
                     value = self.evaluate(initializer)
 
-                self.environment = self.environment.define(name, value)
+                self.environment = self.environment.define(name.lexeme, value)
 
             case Stmt.Block(stmts):
                 self.execute_block(stmts, Environment(self.environment))

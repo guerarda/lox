@@ -21,8 +21,8 @@ class Environment:
 
         return False
 
-    def define(self, name: Token, value: object) -> "Environment":
-        self.values[name.lexeme] = value
+    def define(self, name: str, value: object) -> "Environment":
+        self.values[name] = value
         return self
 
     def define_multiple(

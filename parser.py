@@ -247,6 +247,9 @@ class Parser:
             self.expect(Token.Type.RIGHT_PAREN, "Expect ')' after expression")
             return Expr.Grouping(expr)
 
+        if self.match(Token.Type.THIS):
+            return Expr.This(self.previous())
+
         if self.match(Token.Type.IDENTIFIER):
             return Expr.Variable(self.previous())
 

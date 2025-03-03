@@ -10,7 +10,13 @@ import logging
 
 class FunctionType(Enum):
     NONE = (auto(),)
-    FUNCTION = auto()
+    FUNCTION = (auto(),)
+    METHOD = auto()
+
+
+class ClassType(Enum):
+    NONE = (auto(),)
+    CLASS = auto()
 
 
 class AnalyzerError(LoxError):
@@ -29,6 +35,7 @@ class Analyzer:
     def __init__(self):
         self.scopes: list[dict[str, bool]] = []
         self.functions: list[FunctionType] = [FunctionType.NONE]
+        self.classes: list[ClassType] = [ClassType.NONE]
         self.logger = logging.getLogger("Lox.Analyzer")
 
     def analyze(self, statements: list[Stmt.Statement]):
@@ -55,21 +62,25 @@ class Analyzer:
                     self.analyze_one(initializer)
                 self.define(name)
 
-            case Stmt.Function(name, params, body):
+            case Stmt.Function(name, _, _):
+                self.declare(name)
+                self.define(name)
+                self.analyze_function(stmt_or_expr, FunctionType.FUNCTION)
+
+            case Stmt.Class(name, methods):
+                self.classes.append(ClassType.CLASS)
+
                 self.declare(name)
                 self.define(name)
 
-                self.functions.append(FunctionType.FUNCTION)
-
                 self.begin_scope()
-                for param in params:
-                    self.declare(param)
-                    self.define(param)
 
-                    self.analyze_list(body)
+                self.scopes[-1]["this"] = True
+                for m in methods:
+                    self.analyze_function(m, FunctionType.METHOD)
+
                 self.end_scope()
-
-                self.functions.pop()
+                self.classes.pop()
 
             case Stmt.Expression(expr):
                 self.analyze_one(expr)
@@ -114,6 +125,13 @@ class Analyzer:
                 for arg in args:
                     self.analyze_one(arg)
 
+            case Expr.Set(target, _, value):
+                self.analyze_one(value)
+                self.analyze_one(target)
+
+            case Expr.Get(target):
+                self.analyze_one(target)
+
             case Expr.Grouping(expr):
                 self.analyze_one(expr)
 
@@ -127,8 +145,24 @@ class Analyzer:
             case Expr.Unary(_, expr):
                 self.analyze_one(expr)
 
+            case Expr.This(keyword):
+                if self.classes[-1] == ClassType.NONE:
+                    raise AnalyzerError(keyword, "Can't use 'this' outside of a class")
+                return
+
             case _:
-                raise NotImplementedError(stmt_or_expr.__str__)
+                raise NotImplementedError
+
+    def analyze_function(self, stmt: Stmt.Function, fntype: FunctionType):
+        self.functions.append(fntype)
+        self.begin_scope()
+        for param in stmt.params:
+            self.declare(param)
+            self.define(param)
+
+        self.analyze_list(stmt.body)
+        self.end_scope()
+        self.functions.pop()
 
     def begin_scope(self):
         self.scopes.append({})

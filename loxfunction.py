@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from loxinstance import LoxInstance
 import statement as Stmt
 from environment import Environment
 from loxcallable import LoxCallable, Return
@@ -28,3 +29,9 @@ class LoxFunction(LoxCallable):
             interpreter.execute_block(self.declaration.body, env)
         except Return as e:
             return e.value
+
+    def bind(self, instance: LoxInstance) -> "LoxFunction":
+        env = Environment(self.closure)
+        env.define("this", instance)
+
+        return LoxFunction(self.declaration, env)

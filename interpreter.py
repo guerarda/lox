@@ -297,9 +297,7 @@ class Interpreter:
                     methods[method.name.lexeme] = LoxFunction(method, self.environment)
 
                 klass = LoxClass(statement.name, methods)
-                self.environment = Environment(self.environment).define(
-                    statement.name, klass
-                )
+                self.environment.define(statement.name.lexeme, klass)
 
             case Stmt.Var(name, initializer):
                 value = None

@@ -69,11 +69,18 @@ class Analyzer:
                 self.define(name)
                 self.analyze_function(stmt_or_expr, FunctionType.FUNCTION)
 
-            case Stmt.Class(name, methods):
+            case Stmt.Class(name, superclass, methods):
                 self.classes.append(ClassType.CLASS)
 
                 self.declare(name)
                 self.define(name)
+
+                if superclass:
+                    if name.lexeme == superclass.name.lexeme:
+                        raise AnalyzerError(
+                            superclass.name, "A class can't inherit from itself"
+                        )
+                    self.analyze_one(superclass)
 
                 self.begin_scope()
 

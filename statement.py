@@ -61,4 +61,5 @@ class Return(Statement):
 @dataclass
 class Class(Statement):
     name: Token
+    superclass: Expr.Variable | None
     methods: list[Function]

@@ -1,18 +1,19 @@
 # interpreter
 
 import logging
-import math
 import time
+import math
+
 from formatter import Formatter
 
 import expression as Expr
+from loxinstance import LoxInstance
 import statement as Stmt
 from environment import Environment
 from errors import LoxError, LoxRuntimeError
 from loxcallable import LoxCallable, Return
 from loxclass import LoxClass
 from loxfunction import LoxFunction
-from loxinstance import LoxInstance
 from tokens import Token
 
 
@@ -315,6 +316,13 @@ class Interpreter:
                 self.environment.define(name.lexeme, function)
 
             case Stmt.Class():
+                superclass = None
+                if statement.superclass:
+                    superclass = self.evaluate(statement.superclass)
+                    if not isinstance(superclass, LoxClass):
+                        raise InterpreterTokenError(
+                            statement.superclass.name, "Superclass must be a class"
+                        )
                 methods: dict[str, LoxFunction] = {}
 
                 for method in statement.methods:
@@ -322,7 +330,7 @@ class Interpreter:
                         method, self.environment, method.name.lexeme == "init"
                     )
 
-                klass = LoxClass(statement.name, methods)
+                klass = LoxClass(statement.name, superclass, methods)
                 self.environment.define(statement.name.lexeme, klass)
 
             case Stmt.Var(name, initializer):

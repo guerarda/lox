@@ -293,6 +293,13 @@ class Parser:
 
     def class_decl(self):
         name = self.expect(Token.Type.IDENTIFIER, "Expect class name")
+
+        superclass = None
+        if self.peek().type == Token.Type.LESS:
+            self.advance()
+            self.expect(Token.Type.IDENTIFIER, "Expect superclass name")
+            superclass = Expr.Variable(self.previous())
+
         self.expect(Token.Type.LEFT_BRACE, "Expect '{' before class body")
 
         methods = []
@@ -301,7 +308,7 @@ class Parser:
 
         self.expect(Token.Type.RIGHT_BRACE, "Expect '}' after class body")
 
-        return Stmt.Class(name, methods)
+        return Stmt.Class(name, superclass, methods)
 
     def fun_decl(self, kind: str):
         name = self.expect(Token.Type.IDENTIFIER, f"Expect {kind} name")

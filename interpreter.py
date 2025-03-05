@@ -4,8 +4,6 @@ import logging
 import time
 import math
 
-from formatter import Formatter
-
 import expression as Expr
 from loxinstance import LoxInstance
 import statement as Stmt
@@ -29,12 +27,7 @@ class Clock(LoxCallable):
         return f"<native fn>"
 
 
-# Interpreter Errors
 class InterpreterError(LoxError):
-    pass
-
-
-class InterpreterTokenError(InterpreterError):
     def __init__(self, token: Token, message: str):
         super().__init__(message)
         self.token = token
@@ -42,27 +35,6 @@ class InterpreterTokenError(InterpreterError):
 
     def __str__(self):
         return f"{self.token.line + 1} | {self.message}."
-
-
-class InterpreterExpressionError(InterpreterError):
-    def __init__(self, expression: Expr.Expression, message: str):
-        super().__init__(message)
-        self.expression = expression
-        self.message = message
-
-    def __str__(self):
-        return f"{self.message} '{self.expression}'"
-
-
-class InterpreterStatementError(InterpreterError):
-    def __init__(self, statement: Stmt.Statement, message: str):
-        super().__init__(message)
-        self.statement = statement
-        self.message = message
-
-    def __str__(self):
-        print(Formatter().format_stmt(self.statement))
-        return f"{self.message} '{Formatter().format_stmt(self.statement)}'"
 
 
 class Interpreter:
@@ -113,7 +85,7 @@ class Interpreter:
 
     def check_number_operand(self, operator: Token, operand: object):
         if not isinstance(operand, float):
-            raise InterpreterTokenError(operator, "Operand must be a number")
+            raise InterpreterError(operator, "Operands must be numbers")
 
     def stringify(self, value: object):
         match value:
@@ -266,14 +238,12 @@ class Interpreter:
                 argv = [self.evaluate(arg) for arg in args]
 
                 if not isinstance(cv, LoxCallable):
-                    raise InterpreterTokenError(
-                        paren, "Can only call functions and classes"
-                    )
+                    raise InterpreterError(paren, "Can only call functions and classes")
 
                 if len(argv) != cv.arity():
-                    raise InterpreterTokenError(
+                    raise InterpreterError(
                         paren,
-                        f"Expected {cv.arity()} arguments, got {len(argv)} instead",
+                        f"Expected {cv.arity()} arguments but got {len(argv)}",
                     )
                 return cv.call(self, argv)
 
@@ -291,15 +261,13 @@ class Interpreter:
                     v = self.evaluate(value)
                     obj.set(name, v)
                     return v
-                raise LoxRuntimeError(name, "Only instances have fields.")
+                raise LoxRuntimeError(name, "Only instances have fields")
 
             case Expr.This(keyword):
                 return self.lookup_var(keyword)
 
             case _:
-                raise InterpreterExpressionError(
-                    expression, "Could not evaluate Expression"
-                )
+                raise NotImplementedError
 
     # Executing Statements
     def execute(self, statement: Stmt.Statement):
@@ -320,7 +288,7 @@ class Interpreter:
                 if statement.superclass:
                     superclass = self.evaluate(statement.superclass)
                     if not isinstance(superclass, LoxClass):
-                        raise InterpreterTokenError(
+                        raise InterpreterError(
                             statement.superclass.name, "Superclass must be a class"
                         )
                 methods: dict[str, LoxFunction] = {}
@@ -359,9 +327,7 @@ class Interpreter:
                 raise Return(None if value is None else self.evaluate(value))
 
             case _:
-                raise InterpreterStatementError(
-                    statement, "Could not execute Statement"
-                )
+                raise NotImplementedError
 
     def execute_block(self, statements: list[Stmt.Statement], environment: Environment):
         previous = self.environment

@@ -25,7 +25,7 @@ class LoxInstance:
         if method:
             return method.bind(self)
 
-        raise LoxRuntimeError(name, f"Undefined property '{name.lexeme}'.")
+        raise LoxRuntimeError(name, f"Undefined property '{name.lexeme}'")
 
     def set(self, name: Token, value: object):
         self.fields[name.lexeme] = value

@@ -85,7 +85,11 @@ class Interpreter:
 
     def check_number_operand(self, operator: Token, operand: object):
         if not isinstance(operand, float):
-            raise InterpreterError(operator, "Operands must be numbers")
+            raise LoxRuntimeError(operator, "Operand must be a number")
+
+    def check_number_operands(self, operator: Token, left: object, right: object):
+        if not (isinstance(left, float) and isinstance(right, float)):
+            raise LoxRuntimeError(operator, "Operands must be numbers")
 
     def stringify(self, value: object):
         match value:
@@ -118,10 +122,8 @@ class Interpreter:
 
             case Expr.Binary(Token(Token.Type.MINUS), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
+                self.check_number_operands(expression.operator, lv, rv)
 
                 return float(lv) - float(rv)
 
@@ -132,27 +134,23 @@ class Interpreter:
                 if isinstance(lv, str) and isinstance(rv, str):
                     return str(lv) + str(rv)
 
-                self.check_number_operand(expression.operator, lv)
-                self.check_number_operand(expression.operator, rv)
+                if isinstance(lv, float) and isinstance(rv, float):
+                    return float(lv) + float(rv)
 
-                return float(lv) + float(rv)
+                raise LoxRuntimeError(
+                    expression.operator, "Operands must be two numbers or two strings"
+                )
 
             case Expr.Binary(Token(Token.Type.STAR), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
+                self.check_number_operands(expression.operator, lv, rv)
 
                 return float(lv) * float(rv)
 
             case Expr.Binary(Token(Token.Type.SLASH), left, right):
-
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
 
                 # Python throws an exception when dividing by zero.
                 # Unlike java on top of which Lox is implemented. We
@@ -161,41 +159,34 @@ class Interpreter:
                 if rv == 0.0:
                     return math.inf
 
+                self.check_number_operands(expression.operator, lv, rv)
+
                 return float(lv) / float(rv)
 
             case Expr.Binary(Token(Token.Type.GREATER), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
-
+                self.check_number_operands(expression.operator, lv, rv)
                 return float(lv) > float(rv)
 
             case Expr.Binary(Token(Token.Type.GREATER_EQUAL), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
+                self.check_number_operands(expression.operator, lv, rv)
 
                 return float(lv) >= float(rv)
 
             case Expr.Binary(Token(Token.Type.LESS), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
+                self.check_number_operands(expression.operator, lv, rv)
 
                 return float(lv) < float(rv)
 
             case Expr.Binary(Token(Token.Type.LESS_EQUAL), left, right):
                 lv = self.evaluate(left)
-                self.check_number_operand(expression.operator, lv)
-
                 rv = self.evaluate(right)
-                self.check_number_operand(expression.operator, rv)
+                self.check_number_operands(expression.operator, lv, rv)
 
                 return float(lv) <= float(rv)
 

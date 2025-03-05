@@ -74,3 +74,9 @@ class Set(Expression):
 @dataclass
 class This(Expression):
     keyword: Token
+
+
+@dataclass
+class Super(Expression):
+    keyword: Token
+    method: Token

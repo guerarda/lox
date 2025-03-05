@@ -252,6 +252,13 @@ class Parser:
         if self.match(Token.Type.IDENTIFIER):
             return Expr.Variable(self.previous())
 
+        if self.match(Token.Type.SUPER):
+            keyword = self.previous()
+            self.expect(Token.Type.DOT, "Expect '.' after 'super'")
+            method = self.expect(Token.Type.IDENTIFIER, "Expect superclass method name")
+
+            return Expr.Super(keyword, method)
+
         raise ParseError(self.peek(), "Expect expression")
 
     # Parse Statements

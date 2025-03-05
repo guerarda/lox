@@ -6,6 +6,7 @@ import statement as Stmt
 from environment import Environment
 from loxcallable import LoxCallable, Return
 from loxinstance import LoxInstance
+from tokens import Token
 
 if TYPE_CHECKING:
     from interpreter import Interpreter
@@ -35,14 +36,14 @@ class LoxFunction(LoxCallable):
             interpreter.execute_block(self.declaration.body, env)
         except Return as e:
             if self.is_initializer:
-                return env.get("this")
+                return env.get(Token.THIS())
             return e.value
 
         if self.is_initializer:
-            return env.get("this")
+            return env.get(Token.THIS())
 
     def bind(self, instance: LoxInstance) -> "LoxFunction":
         env = Environment(self.closure)
-        env.define("this", instance)
+        env.define(Token.THIS(), instance)
 
         return LoxFunction(self.declaration, env, self.is_initializer)

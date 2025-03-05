@@ -18,7 +18,8 @@ class FunctionType(Enum):
 
 class ClassType(Enum):
     NONE = (auto(),)
-    CLASS = auto()
+    CLASS = (auto(),)
+    SUBCLASS = auto()
 
 
 class AnalyzerError(LoxError):
@@ -80,7 +81,11 @@ class Analyzer:
                         raise AnalyzerError(
                             superclass.name, "A class can't inherit from itself"
                         )
+                    self.classes.append(ClassType.SUBCLASS)
                     self.analyze_one(superclass)
+
+                    self.begin_scope()
+                    self.scopes[-1]["super"] = True
 
                 self.begin_scope()
 
@@ -94,6 +99,11 @@ class Analyzer:
                     self.analyze_function(m, fntype)
 
                 self.end_scope()
+
+                if superclass:
+                    self.end_scope()
+                    self.classes.pop()
+
                 self.classes.pop()
 
             case Stmt.Expression(expr):
@@ -167,6 +177,16 @@ class Analyzer:
             case Expr.This(keyword):
                 if self.classes[-1] == ClassType.NONE:
                     raise AnalyzerError(keyword, "Can't use 'this' outside of a class")
+                return
+
+            case Expr.Super(keyword, method):
+                if self.classes[-1] == ClassType.NONE:
+                    raise AnalyzerError(keyword, "Can't use 'super' outside of a class")
+
+                if self.classes[-1] != ClassType.SUBCLASS:
+                    raise AnalyzerError(
+                        keyword, "Can't use 'super' in a class with no superclass"
+                    )
                 return
 
             case _:

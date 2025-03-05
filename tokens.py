@@ -67,19 +67,15 @@ class Token:
         else:
             return f"'{self.lexeme}' {self.type}"
 
-    # Utils for quickly creating Tokens, mostly for tests
+    # Utils for quickly creating Tokens
     @classmethod
-    def MINUS(cls):
-        return Token(Token.Type.MINUS, "-", None, 0)
+    def THIS(cls, line: int = 0):
+        return Token(Token.Type.THIS, "this", None, line)
 
     @classmethod
-    def SLASH(cls):
-        return Token(Token.Type.SLASH, "/", None, 0)
+    def SUPER(cls, line: int = 0):
+        return Token(Token.Type.SUPER, "super", None, line)
 
     @classmethod
-    def GREATER(cls):
-        return Token(Token.Type.GREATER, ">", None, 0)
-
-    @classmethod
-    def GREATER_EQUAL(cls):
-        return Token(Token.Type.GREATER_EQUAL, ">=", None, 0)
+    def IDENTIFIER(cls, name: str, line: int = 0):
+        return Token(Token.Type.IDENTIFIER, name, line)

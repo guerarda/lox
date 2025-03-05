@@ -1,17 +1,17 @@
 # interpreter
 
 import logging
-import time
 import math
+import time
 
 import expression as Expr
-from loxinstance import LoxInstance
 import statement as Stmt
 from environment import Environment
 from errors import LoxError, LoxRuntimeError
 from loxcallable import LoxCallable, Return
 from loxclass import LoxClass
 from loxfunction import LoxFunction
+from loxinstance import LoxInstance
 from tokens import Token
 
 
@@ -40,7 +40,7 @@ class InterpreterError(LoxError):
 class Interpreter:
     def __init__(self, environment: Environment | None = None):
         self.environment = environment if environment is not None else Environment()
-        self.globals = Environment().define("clock", Clock())
+        self.globals = Environment().define(Token.IDENTIFIER("clock"), Clock())
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
@@ -54,9 +54,9 @@ class Interpreter:
     # Private functions
     def lookup_var(self, name: Token):
         if name.lexeme in self.environment:
-            return self.environment.get(name.lexeme)
+            return self.environment.get(name)
 
-        return self.globals.get(name.lexeme)
+        return self.globals.get(name)
 
     def is_truthy(self, obj: object) -> bool:
         match obj:
@@ -266,6 +266,21 @@ class Interpreter:
             case Expr.This(keyword):
                 return self.lookup_var(keyword)
 
+            case Expr.Super(keyword, method):
+                superclass = self.environment.get(keyword)
+                assert isinstance(superclass, LoxClass)
+
+                obj = self.environment.get(Token.THIS())
+                assert isinstance(obj, LoxInstance)
+
+                resolved_method = superclass.find_method(method.lexeme)
+                if not resolved_method:
+                    raise InterpreterError(
+                        method, f"Undefined property '{method.lexeme}'"
+                    )
+
+                return resolved_method.bind(obj)
+
             case _:
                 raise NotImplementedError
 
@@ -281,9 +296,9 @@ class Interpreter:
             case Stmt.Function(name, _, _):
                 closure = Environment(self.environment)
                 function = LoxFunction(statement, closure)
-                self.environment.define(name.lexeme, function)
+                self.environment.define(name, function)
 
-            case Stmt.Class():
+            case Stmt.Class(name, _, _):
                 superclass = None
                 if statement.superclass:
                     superclass = self.evaluate(statement.superclass)
@@ -291,24 +306,33 @@ class Interpreter:
                         raise InterpreterError(
                             statement.superclass.name, "Superclass must be a class"
                         )
-                methods: dict[str, LoxFunction] = {}
 
+                self.environment.define(name, None)
+
+                if superclass:
+                    self.environment = Environment(self.environment).define(
+                        Token.SUPER(name.line), superclass
+                    )
+
+                methods: dict[str, LoxFunction] = {}
                 for method in statement.methods:
                     methods[method.name.lexeme] = LoxFunction(
                         method, self.environment, method.name.lexeme == "init"
                     )
 
                 klass = LoxClass(statement.name, superclass, methods)
-                self.environment.define(statement.name.lexeme, klass)
+                self.environment.assign(name, klass)
+
+                if superclass:
+                    assert self.environment.enclosing
+                    self.environment = self.environment.enclosing
 
             case Stmt.Var(name, initializer):
                 value = None
                 if initializer is not None:
                     value = self.evaluate(initializer)
 
-                self.environment = Environment(self.environment).define(
-                    name.lexeme, value
-                )
+                self.environment = Environment(self.environment).define(name, value)
 
             case Stmt.Block(stmts):
                 self.execute_block(stmts, Environment(self.environment))

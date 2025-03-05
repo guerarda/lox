@@ -2,7 +2,7 @@
 
 import logging
 
-from errors import LoxError
+from errors import LoxRuntimeError
 from tokens import Token
 
 
@@ -27,8 +27,8 @@ class Environment:
             res += " -> " + str(self.enclosing)
         return res
 
-    def define(self, name: str, value: object) -> "Environment":
-        self.values[name] = value
+    def define(self, name: Token, value: object) -> "Environment":
+        self.values[name.lexeme] = value
         return self
 
     def define_multiple(
@@ -43,17 +43,17 @@ class Environment:
             self.values[name.lexeme] = value
             return self
 
-        if self.enclosing is not None:
+        if self.enclosing:
             self.enclosing.assign(name, value)
             return self
 
-        raise LoxError(f"Undefined variable '{name.lexeme}'")
+        raise LoxRuntimeError(name, f"Undefined variable '{name.lexeme}'")
 
-    def get(self, name: str) -> object:
-        if name in self.values:
-            return self.values[name]
+    def get(self, name: Token) -> object:
+        if name.lexeme in self.values:
+            return self.values[name.lexeme]
 
         if self.enclosing is not None:
             return self.enclosing.get(name)
 
-        raise LoxError(f"Undefined variable '{name}'")
+        raise LoxRuntimeError(name, f"Undefined variable '{name.lexeme}'")

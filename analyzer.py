@@ -42,15 +42,17 @@ class Analyzer:
         self.logger = logging.getLogger("Lox.Analyzer")
 
     def analyze(self, statements: list[Stmt.Statement]):
-        try:
-            self.analyze_list(statements)
-        except LoxError as e:
-            self.logger.error(e)
-            raise e
-
-    def analyze_list(self, statements: list[Stmt.Statement]):
+        has_error = False
         for stmt in statements:
-            self.analyze_one(stmt)
+            try:
+                self.analyze_one(stmt)
+
+            except LoxError as e:
+                self.logger.error(e)
+                has_error = True
+
+        if has_error:
+            raise LoxError()
 
     def analyze_one(self, stmt_or_expr: Stmt.Statement | Expr.Expression):
         match stmt_or_expr:
@@ -192,14 +194,16 @@ class Analyzer:
             case _:
                 raise NotImplementedError
 
-    def analyze_function(self, stmt: Stmt.Function, fntype: FunctionType):
+    def analyze_function(self, fn: Stmt.Function, fntype: FunctionType):
         self.functions.append(fntype)
         self.begin_scope()
-        for param in stmt.params:
+        for param in fn.params:
             self.declare(param)
             self.define(param)
 
-        self.analyze_list(stmt.body)
+        for stmt in fn.body:
+            self.analyze_one(stmt)
+
         self.end_scope()
         self.functions.pop()
 

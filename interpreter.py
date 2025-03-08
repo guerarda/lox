@@ -39,17 +39,24 @@ class InterpreterError(LoxError):
 
 class Interpreter:
     def __init__(self, environment: Environment | None = None):
-        self.environment = environment if environment is not None else Environment()
-        self.globals = Environment().define(Token.IDENTIFIER("clock"), Clock())
+        self.globals = environment if environment else Environment()
+        self.globals.define(Token.IDENTIFIER("clock"), Clock())
+
+        self.environment = self.globals
         self.logger = logging.getLogger("Lox.Interpreter")
 
     def interpret(self, statements: list[Stmt.Statement]):
-        try:
-            self.execute_statements(statements)
+        has_error = False
+        for stmt in statements:
+            try:
+                self.execute(stmt)
 
-        except LoxError as e:
-            self.logger.error(e)
-            raise e
+            except LoxError as e:
+                self.logger.error(e)
+                has_error = True
+
+        if has_error:
+            raise LoxError()
 
     # Private functions
     def lookup_var(self, name: Token):

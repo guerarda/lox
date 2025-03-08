@@ -1,6 +1,7 @@
 # parser.py
 
 import logging
+from typing import Optional
 
 import expression as Expr
 import statement as Stmt
@@ -34,9 +35,10 @@ class Parser:
 
     # Public functions
     def parse(self):
-        return self.statements()
+        stmts = self.statements()
+        return None if self.has_error else stmts
 
-    def statements(self) -> list[Stmt.Statement]:
+    def statements(self) -> Optional[list[Stmt.Statement]]:
         statements = []
         while not self.is_at_end():
             statements.append(self.declaration())

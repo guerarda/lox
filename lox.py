@@ -75,12 +75,10 @@ def run(source: str, is_repl: bool = False):
     parser = Parser(scanner.scan_tokens())
     stmts = parser.parse()
 
-    if parser.has_error:
+    if stmts is None:
         global has_error
         has_error = True
         return
-
-    assert stmts is not None  # Would have raised an exception
 
     Analyzer().analyze(stmts)
 

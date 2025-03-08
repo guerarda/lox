@@ -12,7 +12,7 @@ test: $(BUILD_DIR)/tests.py
 	@ # If there are extra args, don't use the --skip defaults
 	$(if $(EXTRA_ARGS), \
 		python -m $(TESTS_DIR).loxtest -v run $(EXTRA_ARGS), \
-		python -m $(TESTS_DIR).loxtest -v run --skip EarlyChapters Classes Limits \
+		python -m $(TESTS_DIR).loxtest -v run --skip EarlyChapters Limits\
 	)
 
 $(BUILD_DIR)/tests.py: $(TESTS_DIR)/loxtest.py

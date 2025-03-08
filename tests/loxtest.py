@@ -8,6 +8,7 @@ from pathlib import Path
 
 EXPECT_OUTPUT_PATTERN = re.compile("// expect: ?(.*)")
 EXPECT_ERROR_PATTERN = re.compile(r"// Error at ['\"](.+?)['\"]:\s+(.*)")
+EXPECT_RUNTIME_ERROR_PATTERN = re.compile("// expect runtime error: (.+)")
 
 ALIASES = {
     "ControlFlow": [
@@ -107,40 +108,61 @@ def add_test(filename: str) -> str:
 
     expected_outputs = []
     expected_errors = []
+    expected_runtime_errors = []
+
     with open(filename) as file:
         lines = file.readlines()
         for i, l in enumerate(lines):
             output_match = EXPECT_OUTPUT_PATTERN.search(l)
             error_match = EXPECT_ERROR_PATTERN.search(l)
+            runtime_error_match = EXPECT_RUNTIME_ERROR_PATTERN.search(l)
 
-            if output_match is not None:
+            if output_match:
                 expected_outputs.append(output_match.group(1))
-            elif error_match is not None:
+
+            elif error_match:
                 token = error_match.group(1)
                 message = error_match.group(2)
                 expected_errors.append((i + 1, token, message))
 
+            elif runtime_error_match:
+                message = runtime_error_match.group(1)
+                expected_runtime_errors.append((i + 1, message))
+
     # If there are no expectations at all, return empty string
-    if not expected_outputs and not expected_errors:
+    if not expected_outputs and not expected_errors and not expected_runtime_errors:
         return ""
 
     str = f"    def test_{name}(self):\n"
+    str += f"        with captured_output() as (out, err):\n"
+
+    if expected_errors or expected_runtime_errors:
+        str += f"            with self.assertRaises(SystemExit):\n"
+        str += f"                Lox.run_file('{filename}')\n\n"
+    else:
+        str += f"            Lox.run_file('{filename}')\n\n"
 
     # Handle expected outputs
     if expected_outputs:
-        str += f"        with captured_output() as (out, _):\n"
-        str += f"            Lox.run_file('{filename}')\n"
+        str += f"            # Expected Outputs\n"
         str += f"            self.assertEqual(out.getvalue().splitlines(), {expected_outputs})\n\n"
+
     # Handle expected errors
-    elif expected_errors:
-        str += f"        with captured_output() as (_, err):\n"
-        str += f"            with self.assertRaises(SystemExit):\n"
-        str += f"                Lox.run_file('{filename}')\n"
-        str += f"            error_output = err.getvalue().splitlines()\n"
+    if expected_errors:
         # Check that each expected error appears in the error output
+        str += f"            # Expected Errors\n"
         for line, token, message in expected_errors:
             error_msg = f"{line} | Error at '{repr(token)[1:-1]}': {message}"
-            str += f"            self.assertIn({repr(error_msg)}, error_output)\n"
+            str += f"            self.assertIn({repr(error_msg)},  err.getvalue().splitlines())\n"
+        str += "\n"
+
+    # Handle expected runtime errors
+    if expected_runtime_errors:
+        # Check that each expected error appears in the error output
+        str += f"            # Expected Runtime Errors\n"
+        for line, message in expected_runtime_errors:
+            error_msg = f"{line} | {message}"
+            str += f"            self.assertIn({repr(error_msg)}, err.getvalue().splitlines())\n"
         str += "\n"
 
     return str

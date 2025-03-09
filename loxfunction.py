@@ -30,7 +30,8 @@ class LoxFunction(LoxCallable):
         return len(self.declaration.params)
 
     def call(self, interpreter: "Interpreter", args: list[object]):
-        env = Environment(self.closure).define_multiple(self.declaration.params, args)
+        env = self.closure.push()
+        env.define_multiple(self.declaration.params, args)
 
         try:
             interpreter.execute_block(self.declaration.body, env)
@@ -43,7 +44,7 @@ class LoxFunction(LoxCallable):
             return env.get(Token.THIS())
 
     def bind(self, instance: LoxInstance) -> "LoxFunction":
-        env = Environment(self.closure)
+        env = self.closure.push()
         env.define(Token.THIS(), instance)
 
         return LoxFunction(self.declaration, env, self.is_initializer)

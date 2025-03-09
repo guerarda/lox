@@ -58,13 +58,6 @@ class Interpreter:
         if has_error:
             raise LoxError()
 
-    # Private functions
-    def lookup_var(self, name: Token):
-        if name.lexeme in self.environment:
-            return self.environment.get(name)
-
-        return self.globals.get(name)
-
     def is_truthy(self, obj: object) -> bool:
         match obj:
             case None:
@@ -207,16 +200,11 @@ class Interpreter:
                 return self.evaluate(expr)
 
             case Expr.Variable(name):
-                return self.lookup_var(name)
+                return self.environment.get(name)
 
             case Expr.Assignment(name, value):
                 val = self.evaluate(value)
-
-                if name.lexeme in self.environment:
-                    self.environment = Environment(self.environment).assign(name, val)
-                else:
-                    self.globals = Environment(self.globals).assign(name, val)
-
+                self.environment.assign(name, val)
                 return val
 
             case Expr.Logical(Token(Token.Type.OR), left, right):
@@ -262,7 +250,7 @@ class Interpreter:
                 raise LoxRuntimeError(name, "Only instances have fields")
 
             case Expr.This(keyword):
-                return self.lookup_var(keyword)
+                return self.environment.get(keyword)
 
             case Expr.Super(keyword, method):
                 superclass = self.environment.get(keyword)
@@ -292,9 +280,18 @@ class Interpreter:
                 self.evaluate(expr)
 
             case Stmt.Function(name, _, _):
-                closure = Environment(self.environment)
-                function = LoxFunction(statement, closure)
-                self.environment.define(name, function)
+                # In the global scope, function declarations are
+                # different, they're visible to the whole scope. This
+                # enables mutual recursion, but only in the global
+                # scope.
+                env = self.globals
+                if self.environment.enclosing:
+                    self.environment = self.environment.split()
+                    env = self.environment
+
+                env.define(name)
+                function = LoxFunction(statement, self.environment)
+                env.assign(name, function)
 
             case Stmt.Class(name, _, _):
                 superclass = None
@@ -305,12 +302,11 @@ class Interpreter:
                             statement.superclass.name, "Superclass must be a class"
                         )
 
-                self.environment.define(name, None)
+                self.environment.define(name)
 
                 if superclass:
-                    self.environment = Environment(self.environment).define(
-                        Token.SUPER(name.line), superclass
-                    )
+                    self.environment = self.environment.push()
+                    self.environment.define(Token.SUPER(name.line), superclass)
 
                 methods: dict[str, LoxFunction] = {}
                 for method in statement.methods:
@@ -319,21 +315,22 @@ class Interpreter:
                     )
 
                 klass = LoxClass(statement.name, superclass, methods)
-                self.environment.assign(name, klass)
 
                 if superclass:
-                    assert self.environment.enclosing
-                    self.environment = self.environment.enclosing
+                    self.environment = self.environment.pop()
+
+                self.environment.assign(name, klass)
 
             case Stmt.Var(name, initializer):
                 value = None
                 if initializer is not None:
                     value = self.evaluate(initializer)
 
-                self.environment = Environment(self.environment).define(name, value)
+                self.environment = Environment(self.environment)
+                self.environment.define(name, value)
 
             case Stmt.Block(stmts):
-                self.execute_block(stmts, Environment(self.environment))
+                self.execute_block(stmts, self.environment.push())
 
             case Stmt.If(cond, conseq, alt):
                 if self.is_truthy(self.evaluate(cond)):

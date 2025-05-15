@@ -1,25 +1,25 @@
 # astprinter.py
 
-from expression import *
+import expression as Expr
 
 
 class ASTPrinter:
     def wrap(self, name, expressions):
         strings = [self.print(expr) for expr in expressions]
-        return f"({name} {" ".join(strings)})"
+        return f"({name} {' '.join(strings)})"
 
-    def print(self, expr: Expression) -> str:
+    def print(self, expr: Expr.Expression) -> str:
         match expr:
-            case Binary():
+            case Expr.Binary():
                 return self.wrap(expr.operator.lexeme, [expr.left, expr.right])
 
-            case Grouping():
+            case Expr.Grouping():
                 return self.wrap("grp", [expr.expression])
 
-            case Literal():
+            case Expr.Literal():
                 return f"{expr.value}"
 
-            case Unary():
+            case Expr.Unary():
                 return self.wrap(expr.operator.lexeme, [expr.right])
 
             case _:

@@ -1,7 +1,6 @@
 # loxtest
 
 import argparse
-import os
 import re
 import unittest
 from pathlib import Path
@@ -20,7 +19,7 @@ ALIASES = {
         "variable/unreached_undefined.lox",
     ],
     "Classes": [
-        "assignment/to_this.lox" "call/object.lox",
+        "assignment/to_this.loxcall/object.lox",
         "class",
         "closure/close_over_method_parameter.lox",
         "constructor",
@@ -77,7 +76,6 @@ ALIASES = {
 
 
 def boilerplate() -> str:
-
     str = "import sys\n"
     str += "import unittest\n"
     str += "from contextlib import contextmanager\n"
@@ -112,10 +110,10 @@ def add_test(filename: str) -> str:
 
     with open(filename) as file:
         lines = file.readlines()
-        for i, l in enumerate(lines):
-            output_match = EXPECT_OUTPUT_PATTERN.search(l)
-            error_match = EXPECT_ERROR_PATTERN.search(l)
-            runtime_error_match = EXPECT_RUNTIME_ERROR_PATTERN.search(l)
+        for i, line in enumerate(lines):
+            output_match = EXPECT_OUTPUT_PATTERN.search(line)
+            error_match = EXPECT_ERROR_PATTERN.search(line)
+            runtime_error_match = EXPECT_RUNTIME_ERROR_PATTERN.search(line)
 
             if output_match:
                 expected_outputs.append(output_match.group(1))
@@ -134,23 +132,23 @@ def add_test(filename: str) -> str:
         return ""
 
     str = f"    def test_{name}(self):\n"
-    str += f"        with captured_output() as (out, err):\n"
+    str += "        with captured_output() as (out, err):\n"
 
     if expected_errors or expected_runtime_errors:
-        str += f"            with self.assertRaises(SystemExit):\n"
+        str += "            with self.assertRaises(SystemExit):\n"
         str += f"                Lox.run_file('{filename}')\n\n"
     else:
         str += f"            Lox.run_file('{filename}')\n\n"
 
     # Handle expected outputs
     if expected_outputs:
-        str += f"            # Expected Outputs\n"
+        str += "            # Expected Outputs\n"
         str += f"            self.assertEqual(out.getvalue().splitlines(), {expected_outputs})\n\n"
 
     # Handle expected errors
     if expected_errors:
         # Check that each expected error appears in the error output
-        str += f"            # Expected Errors\n"
+        str += "            # Expected Errors\n"
         for line, token, message in expected_errors:
             error_msg = f"{line} | Error at '{repr(token)[1:-1]}': {message}"
             str += f"            self.assertIn({repr(error_msg)},  err.getvalue().splitlines())\n"
@@ -159,7 +157,7 @@ def add_test(filename: str) -> str:
     # Handle expected runtime errors
     if expected_runtime_errors:
         # Check that each expected error appears in the error output
-        str += f"            # Expected Runtime Errors\n"
+        str += "            # Expected Runtime Errors\n"
         for line, message in expected_runtime_errors:
             error_msg = f"{line} | {message}"
             str += f"            self.assertIn({repr(error_msg)}, err.getvalue().splitlines())\n"
@@ -182,7 +180,6 @@ def generate_tests(basedir: str, output: str):
     str = boilerplate()
 
     for k, v in sorted(find_tests(basedir).items()):
-
         tests = []
         for t in v:
             teststr = add_test(t)
@@ -208,13 +205,12 @@ def list_tests(basedir: str):
             print(f"\n{k}:")
 
         for t in v:
-            print(f"{' '*indent}{Path(t).relative_to(basedir)}")
+            print(f"{' ' * indent}{Path(t).relative_to(basedir)}")
 
 
 def filter_tests(
     add: list[str], skip: list[str], suite: unittest.TestSuite
 ) -> unittest.TestSuite:
-
     filtered = unittest.TestSuite()
 
     for test in suite:

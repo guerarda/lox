@@ -24,7 +24,7 @@ class Clock(LoxCallable):
         return time.time()
 
     def __str__(self):
-        return f"<native fn>"
+        return "<native fn>"
 
 
 class InterpreterError(LoxError):

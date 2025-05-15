@@ -181,7 +181,7 @@ class Analyzer:
                     raise AnalyzerError(keyword, "Can't use 'this' outside of a class")
                 return
 
-            case Expr.Super(keyword, method):
+            case Expr.Super(keyword, _):
                 if self.classes[-1] == ClassType.NONE:
                     raise AnalyzerError(keyword, "Can't use 'super' outside of a class")
 

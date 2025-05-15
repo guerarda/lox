@@ -19,7 +19,8 @@ ALIASES = {
         "variable/unreached_undefined.lox",
     ],
     "Classes": [
-        "assignment/to_this.loxcall/object.lox",
+        "assignment/to_this.lox",
+        "call/object.lox",
         "class",
         "closure/close_over_method_parameter.lox",
         "constructor",
